@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ biz.name }}{% if biz.city %} — {{ biz.city }}{% endif %}</title>
+<meta name="description" content="{{ biz.name }} — {{ biz.category }}{% if biz.city %} in {{ biz.city }}{% endif %}.">
+<style>
+  :root{
+    --ink:#1d2433; --muted:#5b6577; --line:#e8eaf0;
+    --bg:#ffffff; --soft:#f6f7fb; --accent:#c9893f; --accent-d:#a96f2c;
+    --max:1080px;
+  }
+  *{box-sizing:border-box} html{scroll-behavior:smooth}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       color:var(--ink);background:var(--bg);line-height:1.6}
+  a{color:var(--accent-d);text-decoration:none}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+  /* pitch ribbon */
+  .ribbon{background:var(--ink);color:#fff;font-size:14px;text-align:center;padding:9px 16px}
+  .ribbon a{color:#fff;text-decoration:underline;font-weight:600}
+  /* nav */
+  nav{display:flex;align-items:center;justify-content:space-between;padding:20px 0}
+  .brand{font-weight:700;font-size:20px;letter-spacing:.2px}
+  .brand small{display:block;font-weight:500;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:2px}
+  .nav-cta{background:var(--accent);color:#fff;padding:10px 18px;border-radius:999px;font-weight:600;font-size:14px}
+  /* hero */
+  .hero{background:linear-gradient(135deg,#1d2433 0%,#2c374f 60%,#3a2b1c 100%);color:#fff;
+        padding:96px 0;position:relative;overflow:hidden}
+  .hero:after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 80% 20%,rgba(201,137,63,.35),transparent 45%)}
+  .hero .wrap{position:relative;z-index:1}
+  .eyebrow{text-transform:uppercase;letter-spacing:3px;font-size:13px;color:#d8c4a6;margin-bottom:14px}
+  .hero h1{font-size:clamp(34px,6vw,60px);line-height:1.05;margin:0 0 18px;font-weight:800}
+  .hero p{font-size:clamp(16px,2.4vw,20px);max-width:560px;color:#e7e9f0;margin:0 0 30px}
+  .btns{display:flex;gap:14px;flex-wrap:wrap}
+  .btn{display:inline-block;padding:14px 26px;border-radius:999px;font-weight:700;font-size:15px}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-ghost{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3)}
+  /* sections */
+  section{padding:72px 0}
+  h2{font-size:clamp(26px,4vw,38px);margin:0 0 12px;font-weight:800}
+  .lead{color:var(--muted);max-width:620px;font-size:18px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px;margin-top:40px}
+  .card{background:var(--soft);border:1px solid var(--line);border-radius:16px;padding:28px}
+  .card h3{margin:0 0 8px;font-size:20px}
+  .card p{margin:0;color:var(--muted)}
+  .dot{width:42px;height:42px;border-radius:12px;background:var(--accent);opacity:.15;margin-bottom:16px}
+  /* contact */
+  .contact{background:var(--soft);border-top:1px solid var(--line)}
+  .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px}
+  .info p{margin:6px 0;color:var(--muted)}
+  .info strong{color:var(--ink)}
+  .map{border-radius:16px;overflow:hidden;border:1px solid var(--line);min-height:240px;
+       background:#dfe3ec url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><circle cx="20" cy="16" r="7" fill="%23c9893f"/><path d="M20 23 L20 34" stroke="%23a96f2c" stroke-width="3"/></svg>') center/40px no-repeat;
+       display:flex;align-items:flex-end;justify-content:center;padding:18px}
+  .map a{background:#fff;padding:8px 16px;border-radius:999px;font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+  footer{background:var(--ink);color:#aeb6c6;padding:40px 0;font-size:14px;text-align:center}
+  footer a{color:#fff}
+  @media(max-width:720px){.contact-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="ribbon">
+  ✨ This is a free sample site designed for <strong>{{ biz.name }}</strong> by {{ brand.name }} —
+  <a href="{{ booking_url }}">make it yours →</a>
+</div>
+
+<header class="wrap">
+  <nav>
+    <div class="brand">{{ biz.name }}<small>{{ biz.category }}{% if biz.city %} · {{ biz.city }}{% endif %}</small></div>
+    <a class="nav-cta" href="#contact">Contact</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">{% if biz.city %}{{ biz.city }}{% if biz.country %}, {{ biz.country }}{% endif %}{% else %}Welcome{% endif %}</div>
+    <h1>{{ biz.name }}</h1>
+    <p>Your favourite {{ biz.category }}{% if biz.city %} in {{ biz.city }}{% endif %} — now with a home online. Discover what we offer, find us, and get in touch.</p>
+    <div class="btns">
+      {% if biz.phone %}<a class="btn btn-primary" href="tel:{{ biz.phone }}">Call us</a>{% endif %}
+      <a class="btn btn-ghost" href="#contact">Visit &amp; hours</a>
+    </div>
+  </div>
+</div>
+
+<section class="wrap">
+  <h2>What we do</h2>
+  <p class="lead">A quick look at what makes {{ biz.name }} worth the trip.</p>
+  <div class="grid">
+    {% for s in services %}
+    <div class="card"><div class="dot"></div><h3>{{ s }}</h3>
+      <p>Crafted with care for our {{ biz.city or 'local' }} community.</p></div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="contact" id="contact">
+  <div class="wrap">
+    <h2>Find us</h2>
+    <div class="contact-grid" style="margin-top:30px">
+      <div class="info">
+        {% if biz.address %}<p><strong>Address</strong><br>{{ biz.address }}</p>{% endif %}
+        {% if biz.phone %}<p><strong>Phone</strong><br><a href="tel:{{ biz.phone }}">{{ biz.phone }}</a></p>{% endif %}
+        {% if biz.email %}<p><strong>Email</strong><br><a href="mailto:{{ biz.email }}">{{ biz.email }}</a></p>{% endif %}
+        {% if biz.instagram %}<p><strong>Instagram</strong><br>{{ biz.instagram }}</p>{% endif %}
+        <p><strong>Hours</strong><br>Mon–Sat 9:00–17:00 · Sun by appointment</p>
+      </div>
+      <div class="map"><a href="{{ map_url }}" target="_blank" rel="noopener">Open in maps →</a></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>© {{ year }} {{ biz.name }}. Sample website designed by
+       <a href="{{ booking_url }}">{{ brand.name }}</a>.</p>
+    <p style="margin-top:8px"><a href="{{ booking_url }}">Like this? Book a 30-minute call →</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

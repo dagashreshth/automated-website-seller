@@ -1,0 +1,29 @@
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#1d2433;font-size:16px;line-height:1.6;max-width:560px;margin:0 auto">
+  <p>Hi {{ biz.name }} team,</p>
+
+  <p>I came across <strong>{{ biz.name }}</strong>{% if biz.city %} in {{ biz.city }}{% endif %}
+     and noticed you don't seem to have a website yet — so I went ahead and built you a
+     <strong>free sample one</strong> to show what it could look like:</p>
+
+  <p style="text-align:center;margin:28px 0">
+    <a href="{{ preview_url }}"
+       style="background:#c9893f;color:#fff;padding:14px 28px;border-radius:999px;
+              text-decoration:none;font-weight:700;display:inline-block">
+      View your sample website →
+    </a>
+  </p>
+
+  <p>No strings attached — it's yours to look at. If you like the direction, I'd love to jump on a
+     quick <strong>30-minute call</strong> to tailor it to you
+     ({% if biz.category %}your {{ biz.category }}'s {% endif %}photos, hours, booking, the lot)
+     and get it live:</p>
+
+  <p style="margin:18px 0">
+    <a href="{{ booking_url }}" style="color:#a96f2c;font-weight:600">Book a 30-minute call →</a>
+  </p>
+
+  <p>Either way, hope it's a useful starting point.</p>
+  <p>Cheers,<br>{{ brand.name }}</p>
+
+  {{ footer_html | safe }}
+</div>

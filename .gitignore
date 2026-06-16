@@ -1,0 +1,22 @@
+# Secrets — NEVER commit these. Use GitHub Actions secrets instead.
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Local drafts written in review mode (contain prospect data; keep out of git)
+outbox/*.eml
+outbox/review_queue.csv
+
+# Logs / scratch
+*.log
+runs/*.json
+.DS_Store
+
+# NOTE: state/ and previews/ are intentionally NOT ignored.
+#   state/    -> dedup + suppression lists must persist across runs (committed by the Action)
+#   previews/ -> generated sample sites are served by GitHub Pages, so they must be committed

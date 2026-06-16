@@ -1,0 +1,8 @@
+# Core dependencies — all free, all tiny, all pure-Python-friendly.
+requests>=2.31        # HTTP for Overpass / Nominatim / Hunter / Apollo
+Jinja2>=3.1           # HTML templating for preview sites + emails
+PyYAML>=6.0           # human-editable config.yaml
+
+# Optional but recommended: enables free MX-record email verification
+# (the pipeline still runs without it — it just skips the MX check).
+dnspython>=2.4

@@ -1,0 +1,59 @@
+name: Daily outreach
+
+# Runs every morning. Note: GitHub cron is in UTC and (per GitHub's own docs)
+# can be delayed/dropped at the top of the hour under load, so we use an
+# off-peak minute (:27). Adjust the hour to hit your local ~5am.
+#   05:27 UTC. e.g. AEST = UTC+10 -> 15:27 local; EU CET = UTC+1 -> 06:27 local.
+on:
+  schedule:
+    - cron: "27 5 * * *"
+  workflow_dispatch:        # lets you trigger a run manually from the Actions tab
+
+# Only one run at a time; never cancel a run mid-send.
+concurrency:
+  group: daily-outreach
+  cancel-in-progress: false
+
+permissions:
+  contents: write           # needed to commit state/previews back to the repo
+
+jobs:
+  outreach:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run pipeline
+        env:
+          HUNTER_API_KEY: ${{ secrets.HUNTER_API_KEY }}
+          APOLLO_API_KEY: ${{ secrets.APOLLO_API_KEY }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
+          FROM_NAME: ${{ secrets.FROM_NAME }}
+          # Defaults to "review" if the secret is unset. Set to "auto" to send.
+          SEND_MODE: ${{ secrets.SEND_MODE }}
+        run: python run.py
+
+      - name: Commit state + generated sites
+        run: |
+          git config user.name "website-seller-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add state previews runs 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: daily run $(date -u +%FT%TZ)"
+            git push
+          else
+            echo "No changes to commit."
+          fi

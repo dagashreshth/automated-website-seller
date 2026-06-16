@@ -1,0 +1,107 @@
+# ============================================================================
+#  Automated Website Seller — main configuration
+#  Edit this file freely. Secrets live in .env / GitHub Secrets, NOT here.
+# ============================================================================
+
+# Your business identity (used in emails + generated sites + legal footer).
+brand:
+  name: "Shiftora"
+  from_email: "info@shiftora.ai"
+  reply_to: "info@shiftora.ai"
+  # REQUIRED for legal compliance (CAN-SPAM / Spam Act / CASL all mandate a
+  # real physical postal address in every marketing email). Put a real one.
+  postal_address: "REPLACE WITH YOUR REAL POSTAL ADDRESS"
+  # Your free Cal.com 30-min booking link — becomes the email call-to-action.
+  booking_url: "https://cal.com/your-handle/30min"
+  # Where prospects' preview sites are served from (your GitHub Pages base URL).
+  # Will look like: https://<github-username>.github.io/<repo-name>
+  previews_base_url: "https://dagashreshth.github.io/automated-website-seller"
+  # Unsubscribe handling. A mailto unsubscribe is the zero-cost option; anyone
+  # who replies/asks is auto-added to state/suppression.csv on the next run.
+  unsubscribe_email: "info@shiftora.ai"
+
+# ----------------------------------------------------------------------------
+# TARGETING
+# ----------------------------------------------------------------------------
+targeting:
+  # Only contact prospects in these countries (ISO names as they appear in OSM
+  # / Apollo). High-income markets per your spec; low-pay markets excluded.
+  allowed_countries:
+    - "Australia"
+    - "Sweden"
+    - "Finland"
+    - "United States"
+    - "United Kingdom"
+    - "Canada"
+    - "New Zealand"
+    - "Norway"
+    - "Denmark"
+  # Hard safety cap on emails actually sent per run (deliverability + cost).
+  # Start LOW and ramp slowly — see README "Deliverability".
+  max_outreach_per_run: 15
+
+# ----------------------------------------------------------------------------
+# SOURCE 1: OpenStreetMap (FREE, no API key) — local businesses w/o a website
+# ----------------------------------------------------------------------------
+osm:
+  enabled: true
+  # Areas to search this run. Free-text place names; geocoded via Nominatim.
+  # Rotate these so you don't re-scan the same area every morning.
+  areas:
+    - "Byron Bay, New South Wales, Australia"
+    - "Fremantle, Western Australia, Australia"
+  # OSM category selectors (key=value). These are the business types pulled
+  # that have NO website tag. Add/remove freely.
+  categories:
+    - "amenity=cafe"
+    - "amenity=restaurant"
+    - "amenity=bar"
+    - "shop=hairdresser"
+    - "shop=beauty"
+    - "shop=clothes"
+    - "shop=florist"
+    - "shop=jewelry"
+    - "craft=*"
+  # Max raw POIs to pull per area before filtering.
+  max_per_area: 60
+  # If true, only keep OSM prospects that publish an email tag (auto-emailable).
+  # The rest are logged to runs/ for manual phone follow-up.
+  require_email: true
+
+# ----------------------------------------------------------------------------
+# SOURCE 2: Apollo (optional) — B2B service businesses with real emails
+# ----------------------------------------------------------------------------
+apollo:
+  enabled: false   # set true once APOLLO_API_KEY is configured
+  titles: ["Owner", "Founder", "Managing Director", "Practice Manager"]
+  industries: ["Law Practice", "Dental", "Accounting", "Marketing & Advertising"]
+  locations: ["Australia", "Sweden", "Finland"]
+  per_page: 25
+
+# ----------------------------------------------------------------------------
+# SOURCE 3: Manual CSV (optional) — drop leads here from anywhere
+# (e.g. exported via the Apollo MCP). Columns: name,email,category,address,
+# city,country,phone,website. Processed like any other prospect.
+# ----------------------------------------------------------------------------
+manual_csv:
+  enabled: true
+  path: "leads_manual.csv"
+
+# ----------------------------------------------------------------------------
+# EMAIL VERIFICATION — gate before any send (protects deliverability)
+# ----------------------------------------------------------------------------
+verification:
+  use_hunter: true        # uses HUNTER_API_KEY if present, else MX+syntax only
+  require_mx: true         # drop addresses whose domain has no MX record
+  drop_role_free_inbox: false  # keep info@/contact@ (these are the GOOD B2B targets)
+
+# ----------------------------------------------------------------------------
+# SENDING
+# ----------------------------------------------------------------------------
+sending:
+  # "review" = write drafts to outbox/ + review_queue.csv (you send manually)
+  # "auto"   = actually send via SMTP (needs SMTP_* secrets). Read README first.
+  # The SEND_MODE env var, if set, overrides this.
+  mode: "review"
+  # Seconds to wait between sends in auto mode (gentle on deliverability).
+  delay_seconds: 45

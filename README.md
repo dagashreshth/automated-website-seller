@@ -1,0 +1,241 @@
+# Automated Website Seller
+
+Finds local businesses that **don't have a website**, auto-builds each one a
+**personalized sample site**, and prepares (or sends) a **cold-outreach email**
+with a link to that sample and a **30-minute-call** call-to-action — running
+itself every morning on **GitHub Actions' free tier**.
+
+Built to run at **~$0** using OpenStreetMap, GitHub Pages, and GitHub Actions.
+The only stage that may cost money is *sending* email (and even that has a free
+tier) — by design you can run everything else for free and send by hand.
+
+---
+
+## How it works
+
+```
+  ┌──────────────┐   ┌───────────┐   ┌──────────────┐   ┌───────────────┐   ┌──────────┐
+  │  Find leads  │ → │  Verify   │ → │ Build sample │ → │ Write outreach│ → │ Send or  │
+  │ OSM/Apollo/  │   │  email    │   │   website    │   │    email      │   │  draft   │
+  │   manual CSV │   │ (gate)    │   │ (GitHub Pages)│  │ (+ Cal.com CTA)│  │          │
+  └──────────────┘   └───────────┘   └──────────────┘   └───────────────┘   └──────────┘
+        dedup + suppression + country filter applied throughout; state committed back to the repo
+```
+
+Each generated site lands at `previews/<slug>/index.html` and is served at
+`<previews_base_url>/previews/<slug>/`. The email links to it.
+
+---
+
+## ⚠️ Read this first — the honest limits
+
+1. **No website usually means no email, either.** A café with no site often has
+   only a phone or an Instagram. The free OSM path can only *auto-email* the
+   minority that publish an email; the rest are logged for manual phone
+   follow-up. **Your real volume comes from the B2B (Apollo) and manual-CSV
+   paths**, where verified emails exist.
+2. **Deliverability is a hard gate, not a nicety.** Per AWS SES's own docs, a
+   sender goes "under review" above a **5%** bounce rate and is paused above
+   **10%**. That's why every address is verified before sending and the per-run
+   cap starts tiny. Sending blasts of unverified mail will get your domain
+   blocked. ([AWS SES enforcement](https://docs.aws.amazon.com/ses/latest/dg/faqs-enforcement.html))
+3. **Fully-automated unsolicited email is legally risky in your target
+   countries.** See [Legal](#legal--compliance) — this is the biggest risk in
+   the whole design and the research could not confirm it's lawful in the
+   EU/EEA (Sweden, Finland), Canada, or Australia.
+
+---
+
+## Cost: what's free, what isn't
+
+| Stage | Tool | Cost |
+|---|---|---|
+| Local lead sourcing | **OpenStreetMap / Overpass + Nominatim** | **Free**, no key |
+| B2B lead sourcing | Apollo.io API (optional) | Free tier (throttled credits); paid for volume |
+| Email find/verify | Hunter.io (optional) → else **MX + syntax** | Free tier / free fallback |
+| Sample-site hosting | **GitHub Pages** (many sites, one repo) | **Free** |
+| Orchestration / cron | **GitHub Actions** (2,000 min/mo private) | **Free** |
+| State (dedup/suppression) | **CSV committed to the repo** | **Free** |
+| Call booking | **Cal.com** public booking API/link | **Free** |
+| **Email sending** | **Brevo SMTP free tier (300/day)**, or SES (~$0.10/1k) | **Free → cheap** |
+
+The **minimum unavoidable cost is $0** if you send manually from the drafts.
+For automated sending, Brevo's free 300/day tier keeps it at $0 up to that
+volume; a dedicated sending domain (recommended, ~$10/yr) improves inbox rates.
+
+---
+
+## Quick start (local, 100% free)
+
+```bash
+# 1. install (uses a virtualenv so it won't touch system Python)
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+
+# 2. configure — edit config.yaml (areas, brand, booking_url, postal_address)
+#    copy .env.example -> .env if you have any API keys (all optional)
+cp .env.example .env
+
+# 3. dry run: builds real sample sites + email drafts, sends nothing
+python run.py --dry-run
+
+# 4. look at the output
+open previews/index.html        # gallery of generated sample sites
+open outbox/                    # ready-to-send .eml drafts (open in Mail to send)
+cat  outbox/review_queue.csv    # who/what/where, as a spreadsheet
+```
+
+Useful flags: `--source osm|apollo|manual|all`, `--limit N`,
+`--unsubscribe email@x.com` (adds to the suppression list).
+
+---
+
+## Going live on GitHub Actions (free 5am cron)
+
+```bash
+# from this folder, with the GitHub CLI already logged in:
+git init && git add -A && git commit -m "initial"
+gh repo create automated-website-seller --public --source . --push
+```
+
+> **Why public?** GitHub Pages only hosts sites from public repos on the free
+> plan, and the preview sites must be publicly reachable for prospects to open
+> them. **No prospect PII is ever committed:** dedup/suppression are stored as
+> SHA-256 hashes (`state/`), email drafts and run logs stay local/git-ignored
+> (`outbox/`, `runs/`), and console output masks addresses — so the public repo
+> and its Action logs contain no email addresses. The repo holds only the code
+> and the generated sample sites (which are public by design).
+
+Then, in the new repo:
+
+1. **Enable Pages**: Settings → Pages → Source = *Deploy from a branch* →
+   `main` / root. Your previews go live at
+   `https://<you>.github.io/automated-website-seller/previews/<slug>/`.
+   Put that base (without `/previews/...`) into `config.yaml → previews_base_url`.
+2. **Add secrets** (Settings → Secrets and variables → Actions) for any of:
+   `HUNTER_API_KEY`, `APOLLO_API_KEY`, `SMTP_HOST/PORT/USER/PASSWORD`,
+   `FROM_EMAIL`, `FROM_NAME`, `SEND_MODE`.
+3. **Schedule**: edit the cron in `.github/workflows/daily.yml` (UTC!) to hit
+   your local 5am. Default is `05:27 UTC`.
+4. **Test it**: Actions tab → *Daily outreach* → *Run workflow*.
+5. **Go auto** only when ready: set the `SEND_MODE` secret to `auto` and add
+   the `SMTP_*` secrets. Until then it runs in safe **review** mode (builds
+   sites, records leads, sends nothing — drafts live only on the runner, so the
+   committed `runs/*.json` is your record).
+
+The workflow commits `state/`, `previews/`, and `runs/` back to the repo each
+run, so dedup/suppression and your live sites persist for free.
+
+---
+
+## Sending email (the cheap-but-not-always-free part)
+
+You said you'll handle paid sending manually — so the default is **review mode**
+(drafts you send yourself). To automate it cheaply:
+
+- **Brevo** free tier: 300 emails/day over SMTP, $0. Put its SMTP creds in the
+  `SMTP_*` secrets and set `SEND_MODE=auto`.
+- **Authenticate your domain** (SPF, DKIM, DMARC) before any volume — cold mail
+  from an unauthenticated domain goes straight to spam.
+- **Warm up + ramp slowly.** Keep `max_outreach_per_run` low (10–20) for the
+  first couple of weeks. Keep bounces under ~2% (verification gate handles this).
+- Use a **separate domain/subdomain** for outreach so a reputation hit never
+  touches your main inbox.
+
+---
+
+## Legal & compliance
+
+**This is not legal advice. Get a lawyer before sending automated cold email
+into the EU, Canada, or Australia.**
+
+The research deliberately flagged that it **could not verify** fully-automated
+unsolicited B2B cold email is lawful in:
+
+- **EU/EEA (incl. Sweden & Finland)** — GDPR + ePrivacy generally require prior
+  consent (opt-in) for marketing email; B2B has narrow leeway that varies by
+  country. **Highest risk** of your targets.
+- **Canada (CASL)** — strict opt-in; a limited B2B exemption exists.
+- **Australia (Spam Act 2003)** — consent-based, but "inferred consent" can
+  apply to a business whose address is *conspicuously published* and the message
+  is *relevant to its function* — the most defensible of your targets.
+- **US (CAN-SPAM)** — opt-out model; the most permissive.
+
+**Guardrails this tool enforces automatically:**
+- contacts only **published business addresses** with a **relevant** offer,
+- includes a **truthful sender identity** + **real postal address** (set it in
+  `config.yaml`!) + a working **unsubscribe** in every email,
+- honors a permanent **suppression list** (`state/suppression.csv`),
+- only contacts **allowed (high-income) countries**,
+- never contacts anyone twice.
+
+**Recommendation:** keep `require_email: true`, target role addresses
+(`info@`, `contact@`) of businesses, and consider starting with **Australia/US**
+(more defensible) before EU/Canada. Scraping Google Maps directly is a Terms-of-
+Service breach — this tool uses OSM/official APIs instead and you should too.
+
+---
+
+## Lead sources
+
+- **OpenStreetMap** (`config.yaml → osm`): set `areas` (free-text place names)
+  and `categories` (`amenity=cafe`, `shop=hairdresser`, …). Pulls businesses
+  with **no `website` tag**. Rotate areas so you don't rescan the same place.
+- **Apollo** (`config.yaml → apollo`): set `enabled: true` + `APOLLO_API_KEY`.
+  Best for B2B (dentists, law firms). Free tier credits are limited.
+- **Manual CSV** (`leads_manual.csv`): the practical high-quality path. Columns
+  `name,email,category,address,city,country,phone,website` (only name+email
+  required). **Tip:** use the Apollo MCP inside Claude to pull a batch of
+  verified B2B leads, then paste them here.
+
+---
+
+## Configuration reference
+
+All behaviour is in **`config.yaml`** (safe to edit, no secrets). Secrets go in
+**`.env`** locally or **GitHub Secrets** in the cloud. Key knobs:
+
+- `brand.*` — your name, from-email, **postal_address** (legally required),
+  **booking_url** (Cal.com), **previews_base_url** (your Pages URL).
+- `targeting.allowed_countries`, `targeting.max_outreach_per_run` (start low).
+- `osm.areas`, `osm.categories`, `osm.require_email`.
+- `verification.use_hunter`, `verification.require_mx`.
+- `sending.mode` (`review`/`auto`), `sending.delay_seconds`.
+
+---
+
+## Why these choices (from the research)
+
+- Google Maps is **no longer free** for the no-website signal: the old $200
+  credit was replaced March 2025 by small per-SKU caps, and the website field
+  forces the **$20/1k Enterprise SKU**. OSM's `[!"website"]` filter is free.
+  ([Google](https://developers.google.com/maps/billing-and-pricing/march-2025),
+  [OSM](https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL))
+- **GitHub Actions**: 2,000 free private-repo minutes/mo, hard $0 cap with no
+  card on file, Libsodium-encrypted secrets — but cron is **delayed/dropped at
+  the top of the hour**, so we schedule off-peak.
+  ([GitHub](https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions))
+- **Cal.com** has a free public booking endpoint; Calendly gates booking
+  webhooks behind a paid plan. ([Cal.com](https://cal.com/docs/api-reference/v2/introduction))
+- **Hunter.io** is one API for both finding and verifying email.
+  ([Hunter](https://hunter.io/api-documentation))
+
+---
+
+## Project layout
+
+```
+run.py                      # daily entrypoint / orchestrator
+config.yaml                 # all settings (edit me)
+.env.example                # secrets template (copy to .env)
+leads_manual.csv            # drop your own/Apollo-MCP leads here
+seller/
+  config.py  state.py  compliance.py  enrich.py  website.py  sender.py
+  sources/   osm.py  apollo.py  manual.py
+  templates/ site/index.html.j2  site/gallery.html.j2
+             email/outreach.html.j2  email/outreach.txt
+previews/                   # generated sample sites (served by Pages)
+state/                      # sent.csv + suppression.csv (committed each run)
+outbox/                     # local .eml drafts in review mode (gitignored)
+.github/workflows/daily.yml # the free cron
+```

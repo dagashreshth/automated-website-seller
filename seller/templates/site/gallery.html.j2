@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ brand.name }} — Sample Sites</title>
+<style>
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+       background:#f6f7fb;color:#1d2433}
+  .wrap{max-width:1000px;margin:0 auto;padding:48px 24px}
+  h1{font-size:32px;margin:0 0 6px}
+  p.sub{color:#5b6577;margin:0 0 32px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
+  a.card{display:block;background:#fff;border:1px solid #e8eaf0;border-radius:14px;padding:22px;
+         text-decoration:none;color:inherit;transition:transform .1s,box-shadow .1s}
+  a.card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.06)}
+  a.card h3{margin:0 0 4px;font-size:18px}
+  a.card span{color:#5b6577;font-size:14px}
+  .empty{color:#8a93a6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>{{ brand.name }} — Sample Websites</h1>
+  <p class="sub">{{ count }} free sample{{ '' if count == 1 else 's' }} built for local businesses.</p>
+  {% if items %}
+  <div class="grid">
+    {% for it in items %}
+    <a class="card" href="./{{ it.slug }}/">
+      <h3>{{ it.name }}</h3>
+      <span>{{ it.category }}{% if it.city %} · {{ it.city }}{% endif %}</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">No sample sites generated yet.</p>
+  {% endif %}
+</div>
+</body>
+</html>
