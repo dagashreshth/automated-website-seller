@@ -105,7 +105,9 @@ def test_site_template_renders_full_and_empty():
 
 # ----------------------------------------------------------- email/outreach copy
 def test_every_outreach_variant_formats_cleanly():
-    sub = {"name": "X", "city": "Y", "category": "café", "where": " in Y"}
+    sub = {"name": "X", "city": "Y", "category": "café", "where": " in Y",
+           "founder": "Shresh", "location": "Dubai", "brand": "Shiftora",
+           "price": "$399"}
     for v in outreach.VARIANTS:
         v["subject"].format(**sub)
         v["greeting"].format(**sub)
