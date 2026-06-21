@@ -7,10 +7,10 @@
 brand:
   name: "Shiftora"
   # The human the email comes from (signature + intro line).
-  founder: "Shresh"
+  founder: "Shreshth"
   founder_location: "Dubai"
   # Flat price quoted in the outreach email. Edit freely.
-  price: "$399"
+  price: "$299"
   from_email: "info@shiftora.ai"
   reply_to: "info@shiftora.ai"
   # REQUIRED for legal compliance (CAN-SPAM / Spam Act / CASL all mandate a

@@ -81,10 +81,10 @@ def render(prospect: dict, cfg: dict, preview_url: str, env) -> tuple[str, str, 
 
     city = prospect.get("city", "")
     sub = {
-        "founder": brand.get("founder", "Shresh"),
+        "founder": brand.get("founder", "Shreshth"),
         "location": brand.get("founder_location", "Dubai"),
         "brand": brand.get("name", "Shiftora"),
-        "price": brand.get("price", "$399"),
+        "price": brand.get("price", "$299"),
         "name": prospect.get("name", "your business"),
         "city": city,
         "category": prospect.get("category", "business"),
