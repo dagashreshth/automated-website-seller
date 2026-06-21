@@ -25,21 +25,16 @@ brand:
 # ----------------------------------------------------------------------------
 targeting:
   # Only contact prospects in these countries (ISO names as they appear in OSM
-  # / Apollo). High-income markets per your spec; low-pay markets excluded.
-  # NOTE: Australia / US / UK / NZ / Canada are the most legally defensible for
-  # cold B2B email. Sweden/Finland/Norway/Denmark are higher-risk (EU ePrivacy)
-  # — see README "Legal" before sending there.
+  # / Apollo). Restricted to the most legally-defensible high-income markets per
+  # your decision. EU/EEA (incl. Sweden/Finland/Ireland) is OFF — those are the
+  # riskiest for cold email (GDPR/ePrivacy opt-in); add them back here only if
+  # you accept that risk, and re-enable the matching areas below.
   allowed_countries:
     - "Australia"
     - "New Zealand"
     - "United Kingdom"
     - "United States"
     - "Canada"
-    - "Ireland"
-    - "Sweden"
-    - "Finland"
-    - "Norway"
-    - "Denmark"
   # Hard safety cap on emails actually sent per run (deliverability + cost).
   # Start LOW and ramp slowly — see GO_LIVE.md warm-up schedule.
   max_outreach_per_run: 15
@@ -70,13 +65,11 @@ osm:
     - "Wanaka, New Zealand"
     - "Mount Maunganui, Tauranga, New Zealand"
     - "Nelson, New Zealand"
-    # --- United Kingdom & Ireland ---
+    # --- United Kingdom ---
     - "Totnes, Devon, England"
     - "Hebden Bridge, West Yorkshire, England"
     - "Frome, Somerset, England"
     - "St Ives, Cornwall, England"
-    - "Kinsale, County Cork, Ireland"
-    - "Westport, County Mayo, Ireland"
     # --- Canada ---
     - "Canmore, Alberta, Canada"
     - "Stratford, Ontario, Canada"
@@ -86,11 +79,14 @@ osm:
     - "Bend, Oregon, USA"
     - "Burlington, Vermont, USA"
     - "Sedona, Arizona, USA"
-    # --- Nordics (higher legal risk — see README before enabling sends here) ---
-    - "Porvoo, Finland"
-    - "Visby, Gotland, Sweden"
-    - "Ålesund, Norway"
-    - "Roskilde, Denmark"
+    # --- DISABLED: EU/EEA + Ireland (legally riskiest; not in allowed_countries).
+    #     Re-enable these AND add the country above only if you accept the risk.
+    # - "Kinsale, County Cork, Ireland"
+    # - "Westport, County Mayo, Ireland"
+    # - "Porvoo, Finland"
+    # - "Visby, Gotland, Sweden"
+    # - "Ålesund, Norway"
+    # - "Roskilde, Denmark"
   # OSM category selectors (key=value). Business types pulled that have NO
   # website tag AND publish an email. Add/remove freely.
   categories:
