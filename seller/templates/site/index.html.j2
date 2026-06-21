@@ -1,14 +1,19 @@
 <!DOCTYPE html>
 {#
-  Shiftora sample-site template — "Warm & inviting".
+  Shiftora sample-site template — "Warm & inviting" (final, grafted).
   Soft rounded shapes, cosy gradients, friendly and human. Built for cafés,
   salons and local shops so the owner feels right at home.
 
-  Rendered with the documented Jinja2 contract. The theme dict supplies a DARK
-  ink/hero pair and a LIGHT soft, so the hero is a cosy dark gradient with light
-  text while the rest of the page is bright and airy. EVERY optional variable is
-  guarded; theme / tagline / hero_sub / hours all fall back gracefully so the
-  page is always beautiful even when those are missing.
+  Base: the strongest "Warm & inviting" candidate. Grafted in: hero trust
+  chips + a category/location kicker for the headline (so the bare-name
+  headline the live renderer passes reads like a designed hero), and
+  numbered service cards with varied per-card copy (from the editorial /
+  bold-startup candidates) for realism.
+
+  EVERY optional variable is guarded; theme / tagline / hero_sub / hours /
+  services all fall back gracefully so the page is always beautiful even when
+  those are missing. Self-contained: one inline <style>, no web fonts, no
+  external images, no <link>/@import/src=. JS is progressive enhancement only.
 #}
 {%- set t = theme if theme else {} -%}
 {%- set accent      = t.accent      if t.accent      else '#e08a4b' -%}
