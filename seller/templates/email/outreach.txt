@@ -1,14 +1,12 @@
-Hi {{ biz.name }} team,
+{{ greeting }}
 
-I came across {{ biz.name }}{% if biz.city %} in {{ biz.city }}{% endif %} and noticed you don't seem to have a website yet -- so I went ahead and built you a free sample one to show what it could look like:
+{% if paras %}{{ paras[0] }}{% endif %}
 
-{{ preview_url }}
+{{ cta }}: {{ preview_url }}
 
-No strings attached, it's yours to look at. If you like the direction, I'd love to jump on a quick 30-minute call to tailor it to you ({% if biz.category %}your {{ biz.category }}'s {% endif %}photos, hours, booking, the lot) and get it live:
+{% for p in paras[1:] %}{{ p }}
 
-{{ booking_url }}
-
-Either way, hope it's a useful starting point.
+{% endfor %}Book a 30-minute call: {{ booking_url }}
 
 Cheers,
 {{ brand.name }}

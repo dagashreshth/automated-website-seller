@@ -13,11 +13,14 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-STATE_DIR = ROOT / "state"
+# SELLER_STATE_DIR lets tests/dry-runs use an isolated state dir so they never
+# pollute the committed state/ files. Defaults to the repo's state/.
+STATE_DIR = Path(os.environ.get("SELLER_STATE_DIR", str(ROOT / "state")))
 SENT_CSV = STATE_DIR / "sent.csv"
 SUPPRESSION_CSV = STATE_DIR / "suppression.csv"
 

@@ -3,41 +3,81 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Shiftora — Sample Sites</title>
+<title>Shiftora — Sample Websites for Local Businesses</title>
+<meta name="description" content="Free sample websites Shiftora has designed for local businesses — see one built for your business.">
 <style>
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-       background:#f6f7fb;color:#1d2433}
-  .wrap{max-width:1000px;margin:0 auto;padding:48px 24px}
-  h1{font-size:32px;margin:0 0 6px}
-  p.sub{color:#5b6577;margin:0 0 32px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
-  a.card{display:block;background:#fff;border:1px solid #e8eaf0;border-radius:14px;padding:22px;
-         text-decoration:none;color:inherit;transition:transform .1s,box-shadow .1s}
-  a.card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.06)}
-  a.card h3{margin:0 0 4px;font-size:18px}
-  a.card span{color:#5b6577;font-size:14px}
+  :root{--ink:#1d2433;--muted:#5b6577;--line:#e8eaf0;--soft:#f6f7fb;--accent:#4f7cff;--accent-d:#3a5fd8}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       background:var(--soft);color:var(--ink);line-height:1.6}
+  a{color:var(--accent-d);text-decoration:none}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+  .hero{background:linear-gradient(135deg,#161a24 0%,#232a3a 60%,#2b2335 100%);color:#fff;padding:72px 0 64px;position:relative;overflow:hidden}
+  .hero:after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 82% 18%,rgba(79,124,255,.35),transparent 46%)}
+  .hero .wrap{position:relative;z-index:1}
+  .eyebrow{text-transform:uppercase;letter-spacing:3px;font-size:12px;color:#aeb6ff;margin:0 0 14px}
+  .hero h1{font-size:clamp(30px,5vw,48px);line-height:1.08;margin:0 0 14px;font-weight:800;max-width:760px}
+  .hero p{font-size:clamp(16px,2.2vw,19px);color:#d8dcec;max-width:600px;margin:0}
+  .stats{display:flex;gap:40px;flex-wrap:wrap;margin-top:34px}
+  .stat b{display:block;font-size:30px;font-weight:800}
+  .stat span{font-size:13px;color:#aeb6c6;text-transform:uppercase;letter-spacing:1.5px}
+  main{padding:56px 0 72px}
+  h2{font-size:24px;margin:0 0 4px}
+  p.sub{color:var(--muted);margin:0 0 28px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
+  a.card{display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:16px;
+         overflow:hidden;text-decoration:none;color:inherit;transition:transform .12s,box-shadow .12s}
+  a.card:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(0,0,0,.08)}
+  .thumb{height:96px;background:linear-gradient(135deg,var(--accent),var(--accent-d));position:relative}
+  .thumb span{position:absolute;left:18px;bottom:12px;color:#fff;font-weight:800;font-size:20px;opacity:.96}
+  .body{padding:16px 18px}
+  .body h3{margin:0 0 4px;font-size:17px}
+  .chip{display:inline-block;font-size:12px;color:var(--muted);background:var(--soft);
+        border:1px solid var(--line);border-radius:999px;padding:2px 10px;margin-top:4px}
   .empty{color:#8a93a6}
+  footer{border-top:1px solid var(--line);padding:28px 0;color:var(--muted);font-size:14px;text-align:center}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Shiftora — Sample Websites</h1>
-  <p class="sub">2 free samples built for local businesses.</p>
+<div class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Shiftora · Web design for local business</p>
+    <h1>We build local businesses a website they'll actually love.</h1>
+    <p>Every site below is a free sample we designed for a real business that didn't have one yet. Yours could be next.</p>
+    <div class="stats">
+      <div class="stat"><b>2</b><span>Sample sites built</span></div>
+      <div class="stat"><b>2</b><span>Business types</span></div>
+      <div class="stat"><b>30 min</b><span>To make one yours</span></div>
+    </div>
+  </div>
+</div>
+<main class="wrap">
+  <h2>Recent sample sites</h2>
+  <p class="sub">Click any one to see a full, personalized website — built automatically, free to look at.</p>
   
   <div class="grid">
     
-    <a class="card" href="./kokomos-b19e95/">
-      <h3>Kokomo&#39;s</h3>
-      <span>café</span>
+    <a class="card" href="./st-pats-op-shop-c7b46a/">
+      <div class="thumb"><span>ST</span></div>
+      <div class="body">
+        <h3>St Pat&#39;s Op Shop</h3>
+        <span class="chip">boutique</span>
+      </div>
     </a>
     
-    <a class="card" href="./st-pats-op-shop-c7b46a/">
-      <h3>St Pat&#39;s Op Shop</h3>
-      <span>boutique</span>
+    <a class="card" href="./kokomos-b19e95/">
+      <div class="thumb"><span>KO</span></div>
+      <div class="body">
+        <h3>Kokomo&#39;s</h3>
+        <span class="chip">café</span>
+      </div>
     </a>
     
   </div>
   
-</div>
+</main>
+<footer>
+  <div class="wrap">© 2 sample sites · designed by Shiftora</div>
+</footer>
 </body>
 </html>

@@ -1,124 +1,577 @@
 <!DOCTYPE html>
+{#
+  Shiftora sample-site template — "Warm & inviting".
+  Soft rounded shapes, cosy gradients, friendly and human. Built for cafés,
+  salons and local shops so the owner feels right at home.
+
+  Rendered with the documented Jinja2 contract. The theme dict supplies a DARK
+  ink/hero pair and a LIGHT soft, so the hero is a cosy dark gradient with light
+  text while the rest of the page is bright and airy. EVERY optional variable is
+  guarded; theme / tagline / hero_sub / hours all fall back gracefully so the
+  page is always beautiful even when those are missing.
+#}
+{%- set t = theme if theme else {} -%}
+{%- set accent      = t.accent      if t.accent      else '#e08a4b' -%}
+{%- set accent_dark = t.accent_dark if t.accent_dark else '#c46a30' -%}
+{%- set ink         = t.ink         if t.ink         else '#2a211a' -%}
+{%- set soft        = t.soft        if t.soft        else '#f7f3ee' -%}
+{%- set hero_from   = t.hero_from   if t.hero_from   else '#2a211a' -%}
+{%- set hero_to     = t.hero_to     if t.hero_to     else '#3a2c1f' -%}
+{%- set place = [] -%}
+{%- if biz.city %}{% set _ = place.append(biz.city) %}{% endif -%}
+{%- if biz.country %}{% set _ = place.append(biz.country) %}{% endif -%}
+{%- set locale = place | join(', ') -%}
+{%- set headline = tagline if tagline else biz.name -%}
+{%- set category = biz.category if biz.category else 'local favourite' -%}
+{# When the renderer hands us the bare business name as the headline, pair it
+   with a warm category/location kicker so the hero reads like a designed
+   headline rather than a plain label. A distinct tagline still wins. #}
+{%- set headline_is_name = (headline | trim | lower) == (biz.name | trim | lower) -%}
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{ biz.name }}{% if biz.city %} — {{ biz.city }}{% endif %}</title>
-<meta name="description" content="{{ biz.name }} — {{ biz.category }}{% if biz.city %} in {{ biz.city }}{% endif %}.">
+<title>{{ biz.name }}{% if biz.city %} — {{ biz.city }}{% endif %}{% if biz.category %} · {{ biz.category }}{% endif %}</title>
+<meta name="description" content="{% if biz.description %}{{ biz.description }}{% else %}{{ biz.name }} — {{ category }}{% if biz.city %} in {{ biz.city }}{% endif %}.{% endif %}">
+<meta name="theme-color" content="{{ accent }}">
 <style>
   :root{
-    --ink:#1d2433; --muted:#5b6577; --line:#e8eaf0;
-    --bg:#ffffff; --soft:#f6f7fb; --accent:#c9893f; --accent-d:#a96f2c;
-    --max:1080px;
+    --accent:{{ accent }};
+    --accent-dark:{{ accent_dark }};
+    --ink:{{ ink }};
+    --soft:{{ soft }};
+    --hero-from:{{ hero_from }};
+    --hero-to:{{ hero_to }};
+
+    --paper:#fffdfb;
+    --cream:color-mix(in srgb, var(--soft) 78%, #ffffff);
+    --muted:color-mix(in srgb, var(--ink) 56%, #ffffff);
+    --line:color-mix(in srgb, var(--ink) 13%, #ffffff);
+    --on-hero:#fff;
+    --on-hero-soft:color-mix(in srgb, #fff 78%, var(--accent));
+    --max:1120px;
+    --r:22px;
+    --shadow:0 22px 60px -28px color-mix(in srgb, var(--ink) 55%, transparent);
+    --shadow-sm:0 10px 28px -16px color-mix(in srgb, var(--ink) 55%, transparent);
   }
-  *{box-sizing:border-box} html{scroll-behavior:smooth}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-       color:var(--ink);background:var(--bg);line-height:1.6}
-  a{color:var(--accent-d);text-decoration:none}
-  .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
-  /* pitch ribbon */
-  .ribbon{background:var(--ink);color:#fff;font-size:14px;text-align:center;padding:9px 16px}
-  .ribbon a{color:#fff;text-decoration:underline;font-weight:600}
-  /* nav */
-  nav{display:flex;align-items:center;justify-content:space-between;padding:20px 0}
-  .brand{font-weight:700;font-size:20px;letter-spacing:.2px}
-  .brand small{display:block;font-weight:500;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:2px}
-  .nav-cta{background:var(--accent);color:#fff;padding:10px 18px;border-radius:999px;font-weight:600;font-size:14px}
-  /* hero */
-  .hero{background:linear-gradient(135deg,#1d2433 0%,#2c374f 60%,#3a2b1c 100%);color:#fff;
-        padding:96px 0;position:relative;overflow:hidden}
-  .hero:after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 80% 20%,rgba(201,137,63,.35),transparent 45%)}
-  .hero .wrap{position:relative;z-index:1}
-  .eyebrow{text-transform:uppercase;letter-spacing:3px;font-size:13px;color:#d8c4a6;margin-bottom:14px}
-  .hero h1{font-size:clamp(34px,6vw,60px);line-height:1.05;margin:0 0 18px;font-weight:800}
-  .hero p{font-size:clamp(16px,2.4vw,20px);max-width:560px;color:#e7e9f0;margin:0 0 30px}
-  .btns{display:flex;gap:14px;flex-wrap:wrap}
-  .btn{display:inline-block;padding:14px 26px;border-radius:999px;font-weight:700;font-size:15px}
-  .btn-primary{background:var(--accent);color:#fff}
-  .btn-ghost{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3)}
-  /* sections */
-  section{padding:72px 0}
-  h2{font-size:clamp(26px,4vw,38px);margin:0 0 12px;font-weight:800}
-  .lead{color:var(--muted);max-width:620px;font-size:18px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px;margin-top:40px}
-  .card{background:var(--soft);border:1px solid var(--line);border-radius:16px;padding:28px}
-  .card h3{margin:0 0 8px;font-size:20px}
-  .card p{margin:0;color:var(--muted)}
-  .dot{width:42px;height:42px;border-radius:12px;background:var(--accent);opacity:.15;margin-bottom:16px}
-  /* contact */
-  .contact{background:var(--soft);border-top:1px solid var(--line)}
-  .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px}
-  .info p{margin:6px 0;color:var(--muted)}
-  .info strong{color:var(--ink)}
-  .map{border-radius:16px;overflow:hidden;border:1px solid var(--line);min-height:240px;
-       background:#dfe3ec url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><circle cx="20" cy="16" r="7" fill="%23c9893f"/><path d="M20 23 L20 34" stroke="%23a96f2c" stroke-width="3"/></svg>') center/40px no-repeat;
-       display:flex;align-items:flex-end;justify-content:center;padding:18px}
-  .map a{background:#fff;padding:8px 16px;border-radius:999px;font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,.08)}
-  footer{background:var(--ink);color:#aeb6c6;padding:40px 0;font-size:14px;text-align:center}
-  footer a{color:#fff}
-  @media(max-width:720px){.contact-grid{grid-template-columns:1fr}}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);background:var(--paper);line-height:1.65;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  }
+  a{color:var(--accent-dark);text-decoration:none}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 22px;width:100%}
+  .eyebrow{
+    text-transform:uppercase;letter-spacing:.2em;font-size:12.5px;font-weight:700;
+    color:var(--accent-dark);margin:0 0 14px;display:flex;align-items:center;gap:10px;
+  }
+  .eyebrow::before{content:"";width:26px;height:2px;border-radius:2px;background:var(--accent)}
+  h1,h2,h3{letter-spacing:-.02em;line-height:1.1;margin-top:0}
+
+  /* ---- 1. pitch ribbon (the studio talking — deliberately distinct) ---- */
+  .ribbon{
+    background:var(--ink);color:#fff;font-size:13.5px;text-align:center;
+    padding:9px 18px;line-height:1.45;position:relative;z-index:60;
+  }
+  .ribbon b{font-weight:700}
+  .ribbon a{
+    color:#fff;font-weight:700;white-space:nowrap;
+    border-bottom:2px solid color-mix(in srgb, var(--accent) 85%, #fff);
+    padding-bottom:1px;transition:opacity .2s;
+  }
+  .ribbon a:hover{opacity:.75}
+
+  /* ---- 2. nav ---- */
+  header{position:sticky;top:0;z-index:50}
+  nav{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 0;
+    background:color-mix(in srgb, var(--paper) 84%, transparent);
+    backdrop-filter:saturate(160%) blur(12px);-webkit-backdrop-filter:saturate(160%) blur(12px);
+    border-bottom:1px solid transparent;transition:border-color .3s, box-shadow .3s;
+  }
+  nav.scrolled{border-color:var(--line);box-shadow:0 8px 26px -22px color-mix(in srgb, var(--ink) 70%, transparent)}
+  .brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .mark{
+    width:44px;height:44px;border-radius:15px;flex:0 0 auto;display:grid;place-items:center;
+    color:#fff;font-weight:800;font-size:20px;
+    background:linear-gradient(145deg,var(--accent),var(--accent-dark));box-shadow:var(--shadow-sm);
+  }
+  .brand-text{display:flex;flex-direction:column;min-width:0}
+  .brand-name{font-weight:800;font-size:18px;line-height:1.15;letter-spacing:-.01em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+  .brand-sub{font-size:11px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+  .nav-cta{
+    background:var(--accent);color:#fff;padding:11px 22px;border-radius:999px;
+    font-weight:700;font-size:14.5px;white-space:nowrap;box-shadow:var(--shadow-sm);
+    transition:transform .15s, background .2s;
+  }
+  .nav-cta:hover{transform:translateY(-1px);background:var(--accent-dark)}
+
+  /* ---- 3. hero (cosy dark gradient, light text) ---- */
+  .hero{
+    position:relative;overflow:hidden;color:var(--on-hero);
+    background:
+      radial-gradient(130% 95% at 86% -12%, color-mix(in srgb, var(--accent) 60%, transparent), transparent 58%),
+      radial-gradient(90% 80% at -6% 112%, color-mix(in srgb, var(--accent-dark) 48%, transparent), transparent 55%),
+      linear-gradient(165deg, var(--hero-from) 0%, var(--hero-to) 100%);
+  }
+  .hero::before,.hero::after{content:"";position:absolute;border-radius:50%;z-index:0;filter:blur(2px)}
+  .hero::before{width:360px;height:360px;top:-100px;right:-70px;opacity:.35;
+    background:radial-gradient(circle at 35% 35%, var(--accent), transparent 70%)}
+  .hero::after{width:280px;height:280px;bottom:-130px;left:-60px;opacity:.3;
+    background:radial-gradient(circle at 50% 50%, var(--accent-dark), transparent 70%)}
+  .hero-inner{
+    position:relative;z-index:1;display:grid;grid-template-columns:1.18fr .82fr;gap:48px;
+    align-items:center;padding:78px 0 86px;
+  }
+  .hero .eyebrow{color:var(--on-hero-soft)}
+  .hero .eyebrow::before{background:var(--accent)}
+  .hero h1{font-size:clamp(38px,6.6vw,68px);font-weight:800;margin:0 0 20px;color:#fff}
+  .h1-kicker{display:block;margin-top:12px;font-size:clamp(16px,2vw,21px);font-weight:600;
+    letter-spacing:0;color:color-mix(in srgb,#fff 72%,var(--accent))}
+  .hero-sub{font-size:clamp(17px,2.2vw,21px);color:color-mix(in srgb, #fff 86%, var(--accent));
+    max-width:540px;margin:0 0 32px}
+  .btns{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .btn{
+    display:inline-flex;align-items:center;gap:9px;padding:15px 28px;border-radius:999px;
+    font-weight:700;font-size:15.5px;transition:transform .15s, box-shadow .2s, background .2s, border-color .2s;cursor:pointer;
+  }
+  .btn-primary{background:var(--accent);color:#fff;box-shadow:0 16px 34px -14px color-mix(in srgb, var(--accent) 90%, transparent)}
+  .btn-primary:hover{transform:translateY(-2px);background:var(--accent-dark)}
+  .btn-ghost{background:color-mix(in srgb, #fff 14%, transparent);color:#fff;border:1.5px solid color-mix(in srgb,#fff 35%,transparent)}
+  .btn-ghost:hover{transform:translateY(-2px);border-color:#fff;background:color-mix(in srgb,#fff 22%,transparent)}
+  .trust{list-style:none;margin:30px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:10px 22px}
+  .trust li{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;
+    color:color-mix(in srgb,#fff 80%,var(--accent))}
+  .trust li span{color:color-mix(in srgb,#fff 88%,var(--accent))}
+
+  /* cosy CSS-only "storefront" card */
+  .hero-card{
+    position:relative;border-radius:28px;overflow:hidden;min-height:300px;
+    background:linear-gradient(160deg,#fff,var(--cream));
+    border:1px solid color-mix(in srgb,#fff 70%,var(--accent));box-shadow:var(--shadow);
+  }
+  .hero-card .awning{
+    height:58px;
+    background:repeating-linear-gradient(90deg,var(--accent) 0 28px,#fff 28px 56px);
+    border-bottom:4px solid var(--accent-dark);
+    -webkit-mask:radial-gradient(14px 18px at 14px 100%, transparent 96%, #000) repeat-x bottom/28px 18px;
+    mask:radial-gradient(14px 18px at 14px 100%, transparent 96%, #000) repeat-x bottom/28px 18px;
+  }
+  .hero-card .pane{padding:24px 26px 28px}
+  .hero-card .chip{
+    display:inline-block;background:var(--soft);color:var(--accent-dark);
+    font-weight:700;font-size:13px;padding:7px 14px;border-radius:999px;margin:0 8px 8px 0;
+  }
+  .hero-card .openline{display:flex;align-items:center;gap:10px;margin-top:16px;font-weight:700;color:var(--ink)}
+  .hero-card .pulse{width:11px;height:11px;border-radius:50%;background:#3aa76d;
+    box-shadow:0 0 0 0 rgba(58,167,109,.5);animation:pulse 2.4s infinite}
+  .hero-card .rating{margin-top:14px;color:var(--accent);font-size:18px;letter-spacing:3px}
+  .hero-card .rating small{color:var(--muted);font-size:13px;letter-spacing:0;margin-left:6px}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(58,167,109,.45)}70%{box-shadow:0 0 0 12px rgba(58,167,109,0)}100%{box-shadow:0 0 0 0 rgba(58,167,109,0)}}
+
+  /* ---- generic section ---- */
+  section{padding:80px 0}
+  .sec-head{max-width:660px}
+  h2{font-size:clamp(28px,4.2vw,42px);font-weight:800;margin:0 0 14px;color:var(--ink)}
+  .lead{color:var(--muted);font-size:clamp(16px,2vw,18.5px);margin:0}
+
+  /* ---- 4. services ---- */
+  .services{background:linear-gradient(180deg,var(--paper),var(--cream) 55%,var(--paper))}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:22px;margin-top:42px}
+  .card{
+    background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:30px 28px;
+    box-shadow:var(--shadow-sm);transition:transform .2s, box-shadow .2s, border-color .2s;
+    position:relative;overflow:hidden;
+  }
+  .card::after{content:"";position:absolute;right:-40px;top:-40px;width:120px;height:120px;border-radius:50%;
+    background:radial-gradient(circle, color-mix(in srgb, var(--accent) 18%, transparent), transparent 70%)}
+  .card:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:color-mix(in srgb, var(--accent) 45%, var(--line))}
+  .ic{
+    width:54px;height:54px;border-radius:16px;display:grid;place-items:center;margin-bottom:18px;
+    background:linear-gradient(145deg, color-mix(in srgb, var(--accent) 24%, #fff), color-mix(in srgb, var(--accent) 9%, #fff));
+    color:var(--accent-dark);font-weight:800;font-size:21px;position:relative;z-index:1;
+  }
+  .card .num{position:absolute;top:20px;right:24px;z-index:1;font-weight:800;font-size:15px;
+    letter-spacing:.04em;color:color-mix(in srgb,var(--accent) 55%,var(--line))}
+  .card h3{margin:0 0 8px;font-size:20px;font-weight:800;color:var(--ink);position:relative;z-index:1}
+  .card p{margin:0;color:var(--muted);position:relative;z-index:1}
+
+  /* ---- 5. about ---- */
+  .about-inner{display:grid;grid-template-columns:.92fr 1.08fr;gap:54px;align-items:center}
+  .about-art{
+    border-radius:26px;min-height:300px;position:relative;overflow:hidden;
+    background:
+      radial-gradient(circle at 28% 24%, color-mix(in srgb, var(--accent) 58%, #fff), transparent 46%),
+      radial-gradient(circle at 80% 74%, color-mix(in srgb, var(--accent-dark) 52%, #fff), transparent 50%),
+      linear-gradient(150deg, var(--soft), var(--cream));
+    border:1px solid color-mix(in srgb, var(--ink) 9%, #fff);box-shadow:var(--shadow);
+  }
+  .about-art .quote{
+    position:absolute;inset:auto 22px 22px 22px;background:rgba(255,255,255,.86);
+    backdrop-filter:blur(4px);border-radius:18px;padding:20px 22px;font-weight:600;color:var(--ink);
+    box-shadow:var(--shadow-sm);
+  }
+  .about-art .quote span{display:block;margin-top:8px;font-weight:700;color:var(--accent-dark);font-size:14px}
+  .about-text p{font-size:clamp(16px,1.9vw,18.5px);color:color-mix(in srgb, var(--ink) 80%, #fff);margin:0 0 18px}
+  .pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+  .pill{background:var(--soft);color:var(--accent-dark);font-weight:700;font-size:13.5px;padding:8px 16px;border-radius:999px}
+
+  /* ---- 6. hours ---- */
+  .hours{background:var(--soft)}
+  .hours-card{
+    margin-top:36px;background:#fff;border:1px solid var(--line);border-radius:var(--r);
+    box-shadow:var(--shadow-sm);overflow:hidden;max-width:580px;
+  }
+  .hours-row{display:flex;justify-content:space-between;align-items:center;gap:16px;
+    padding:15px 26px;border-bottom:1px solid var(--line);font-size:16px}
+  .hours-row:last-child{border-bottom:none}
+  .hours-row .day{font-weight:700;color:var(--ink)}
+  .hours-row .time{color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
+
+  /* ---- 7. contact ---- */
+  .contact{background:linear-gradient(180deg,var(--paper),var(--cream))}
+  .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:36px;margin-top:42px;align-items:stretch}
+  .info{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:30px;box-shadow:var(--shadow-sm)}
+  .info-item{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line)}
+  .info-item:last-child{border-bottom:none}
+  .info-item .ic2{flex:0 0 auto;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;
+    background:var(--soft);color:var(--accent-dark);font-size:18px}
+  .info-item .k{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700}
+  .info-item .v{font-weight:600;color:var(--ink);word-break:break-word}
+  .info-item .v a{color:var(--ink)}
+  .info-item .v a:hover{color:var(--accent-dark)}
+  .socials{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .social{display:inline-flex;align-items:center;gap:8px;background:var(--soft);color:var(--accent-dark);
+    font-weight:700;font-size:14px;padding:10px 16px;border-radius:999px;transition:background .2s}
+  .social:hover{background:color-mix(in srgb, var(--accent) 18%, var(--soft))}
+  .map{
+    position:relative;border-radius:var(--r);overflow:hidden;min-height:300px;border:1px solid var(--line);
+    box-shadow:var(--shadow-sm);display:flex;align-items:flex-end;justify-content:center;padding:22px;
+    background-color:var(--cream);
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--ink) 7%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--ink) 7%, transparent) 1px, transparent 1px),
+      radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--accent) 30%, transparent), transparent 38%);
+    background-size:34px 34px, 34px 34px, 100% 100%;
+  }
+  .map .pin{
+    position:absolute;top:38%;left:50%;transform:translate(-50%,-100%) rotate(-45deg);
+    width:30px;height:30px;border-radius:50% 50% 50% 0;
+    background:linear-gradient(145deg,var(--accent),var(--accent-dark));
+    box-shadow:0 10px 18px -8px color-mix(in srgb, var(--accent-dark) 80%, transparent);
+  }
+  .map .pin::after{content:"";position:absolute;inset:0;margin:auto;width:11px;height:11px;border-radius:50%;background:#fff}
+  .map .maplink{position:relative;background:#fff;color:var(--ink);padding:11px 20px;border-radius:999px;font-weight:700;
+    box-shadow:var(--shadow-sm);transition:transform .15s}
+  .map .maplink:hover{transform:translateY(-2px);color:var(--accent-dark)}
+
+  /* ---- 8. footer ---- */
+  footer{background:var(--ink);color:color-mix(in srgb,#fff 76%,var(--ink));padding:54px 0 40px}
+  .foot-grid{display:flex;flex-wrap:wrap;gap:28px;justify-content:space-between;align-items:center}
+  .foot-brand{font-weight:800;font-size:20px;color:#fff}
+  .foot-cta{display:inline-flex;align-items:center;gap:9px;background:var(--accent);color:#fff;padding:14px 26px;
+    border-radius:999px;font-weight:700;box-shadow:0 16px 34px -16px color-mix(in srgb, var(--accent) 95%, transparent);
+    transition:transform .15s, background .2s}
+  .foot-cta:hover{transform:translateY(-2px);background:var(--accent-dark)}
+  .foot-meta{margin-top:30px;padding-top:22px;border-top:1px solid color-mix(in srgb,#fff 16%,var(--ink));font-size:14px;
+    display:flex;flex-wrap:wrap;gap:8px 18px;justify-content:space-between;color:color-mix(in srgb,#fff 60%,var(--ink))}
+  .foot-meta a{color:#fff;font-weight:600}
+
+  /* ---- mobile sticky CTA (progressive enhancement, hidden w/o JS) ---- */
+  .sticky-cta{
+    position:fixed;left:14px;right:14px;bottom:14px;z-index:70;display:none;
+    align-items:center;justify-content:space-between;gap:12px;
+    background:var(--ink);color:#fff;padding:12px 14px 12px 18px;border-radius:18px;
+    box-shadow:0 18px 40px -12px rgba(0,0,0,.5);transform:translateY(150%);transition:transform .35s ease;
+  }
+  .sticky-cta.show{transform:translateY(0)}
+  .sticky-cta .t{font-weight:700;font-size:14px;line-height:1.2}
+  .sticky-cta .t small{display:block;font-weight:500;font-size:12px;color:color-mix(in srgb,#fff 70%,var(--ink))}
+  .sticky-cta a{background:var(--accent);color:#fff;padding:11px 18px;border-radius:999px;font-weight:700;font-size:14px;white-space:nowrap}
+
+  /* ---- responsive ---- */
+  @media(max-width:880px){
+    .hero-inner{grid-template-columns:1fr;gap:34px;padding:56px 0 66px}
+    .hero-card{order:-1;min-height:230px}
+    .about-inner{grid-template-columns:1fr;gap:32px}
+    .about-art{min-height:230px;order:-1}
+    .contact-grid{grid-template-columns:1fr}
+    .map{min-height:230px}
+  }
+  @media(max-width:640px){
+    section{padding:58px 0}
+    .nav-cta{display:none}
+    .sticky-cta{display:flex}
+    .foot-grid{flex-direction:column;align-items:flex-start;gap:18px}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *{animation:none!important;scroll-behavior:auto!important;transition:none!important}
+  }
 </style>
 </head>
 <body>
 
+{# ---------- 1. PITCH RIBBON ---------- #}
 <div class="ribbon">
-  ✨ This is a free sample site designed for <strong>{{ biz.name }}</strong> by {{ brand.name }} —
+  ✨ A free sample site built for <b>{{ biz.name }}</b>{% if brand.name %} by {{ brand.name }}{% endif %} —
   <a href="{{ booking_url }}">make it yours →</a>
 </div>
 
-<header class="wrap">
-  <nav>
-    <div class="brand">{{ biz.name }}<small>{{ biz.category }}{% if biz.city %} · {{ biz.city }}{% endif %}</small></div>
-    <a class="nav-cta" href="#contact">Contact</a>
-  </nav>
+{# ---------- 2. NAV ---------- #}
+<header>
+  <div class="wrap">
+    <nav id="nav">
+      <div class="brand">
+        <div class="mark" aria-hidden="true">{{ biz.name[0]|upper if biz.name else '•' }}</div>
+        <div class="brand-text">
+          <span class="brand-name">{{ biz.name }}</span>
+          {% if biz.category or biz.city %}
+          <span class="brand-sub">{{ biz.category }}{% if biz.category and biz.city %} · {% endif %}{{ biz.city }}</span>
+          {% endif %}
+        </div>
+      </div>
+      <a class="nav-cta" href="#contact">{% if biz.phone %}Call us{% else %}Contact{% endif %}</a>
+    </nav>
+  </div>
 </header>
 
+{# ---------- 3. HERO ---------- #}
 <div class="hero">
   <div class="wrap">
-    <div class="eyebrow">{% if biz.city %}{{ biz.city }}{% if biz.country %}, {{ biz.country }}{% endif %}{% else %}Welcome{% endif %}</div>
-    <h1>{{ biz.name }}</h1>
-    <p>Your favourite {{ biz.category }}{% if biz.city %} in {{ biz.city }}{% endif %} — now with a home online. Discover what we offer, find us, and get in touch.</p>
-    <div class="btns">
-      {% if biz.phone %}<a class="btn btn-primary" href="tel:{{ biz.phone }}">Call us</a>{% endif %}
-      <a class="btn btn-ghost" href="#contact">Visit &amp; hours</a>
+    <div class="hero-inner">
+      <div class="hero-copy">
+        {% if locale %}
+        <p class="eyebrow">{{ locale }}</p>
+        {% elif biz.category %}
+        <p class="eyebrow">Your local {{ biz.category }}</p>
+        {% endif %}
+
+        <h1>{{ headline }}{% if headline_is_name %}<span class="h1-kicker">{% if biz.category %}Your {{ biz.category }}{% if biz.city %} in {{ biz.city }}{% endif %}{% elif biz.city %}A local favourite in {{ biz.city }}{% else %}A local favourite, done right{% endif %}</span>{% endif %}</h1>
+
+        <p class="hero-sub">
+          {%- if hero_sub %}{{ hero_sub }}
+          {%- else %}Welcome to {{ biz.name }}{% if biz.category %}, your friendly {{ biz.category }}{% endif %}{% if biz.city %} in the heart of {{ biz.city }}{% endif %}. We'd love to see you soon.{% endif %}
+        </p>
+
+        <div class="btns">
+          {% if biz.phone %}<a class="btn btn-primary" href="tel:{{ biz.phone }}">📞 Call us</a>{% endif %}
+          <a class="btn {% if not biz.phone %}btn-primary{% else %}btn-ghost{% endif %}" href="#contact">Get in touch →</a>
+        </div>
+
+        <ul class="trust" aria-label="Highlights">
+          <li>★★★★★ <span>Loved by locals</span></li>
+          {% if biz.city %}<li>📍 <span>Right here in {{ biz.city }}</span></li>{% endif %}
+          {% if hours %}<li>🕑 <span>Open this week</span></li>{% else %}<li>🤝 <span>Independent &amp; local</span></li>{% endif %}
+        </ul>
+      </div>
+
+      {# cosy CSS-only storefront card #}
+      <div class="hero-card" aria-hidden="true">
+        <div class="awning"></div>
+        <div class="pane">
+          {% if services %}
+            {% for s in services[:3] %}<span class="chip">{{ s }}</span>{% endfor %}
+          {% elif biz.cuisine %}
+            {% for c in biz.cuisine.split(',') %}<span class="chip">{{ c|trim|title }}</span>{% endfor %}
+          {% else %}
+            <span class="chip">Warm welcome</span><span class="chip">Local favourite</span>
+          {% endif %}
+          <div class="openline"><span class="pulse"></span> Open &amp; ready to welcome you</div>
+          <div class="rating">★★★★★ <small>loved by locals{% if biz.city %} in {{ biz.city }}{% endif %}</small></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
-<section class="wrap">
-  <h2>What we do</h2>
-  <p class="lead">A quick look at what makes {{ biz.name }} worth the trip.</p>
-  <div class="grid">
-    {% for s in services %}
-    <div class="card"><div class="dot"></div><h3>{{ s }}</h3>
-      <p>Crafted with care for our {{ biz.city or 'local' }} community.</p></div>
-    {% endfor %}
+{# ---------- 4. SERVICES ---------- #}
+{% if services %}
+<section class="services">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">What we offer</p>
+      <h2>Made with care, just for you</h2>
+      <p class="lead">A little taste of what brings people back to {{ biz.name }}{% if biz.city %} in {{ biz.city }}{% endif %}.</p>
+    </div>
+    <div class="grid">
+      {% set blurbs = [
+        'Thoughtfully done, the way our ' ~ (biz.city or 'local') ~ ' regulars love it.',
+        'A little detail we take real pride in — and you can feel it.',
+        'Done properly, with the care you would expect from a local favourite.',
+        'One of the reasons people keep coming back to ' ~ biz.name ~ '.',
+        'Friendly, reliable, and made to feel just right for you.',
+        'Simple things, done exceptionally well — every single time.'
+      ] %}
+      {% for s in services %}
+      <div class="card">
+        <span class="num" aria-hidden="true">{{ '%02d'|format(loop.index) }}</span>
+        <div class="ic" aria-hidden="true">{{ s[0]|upper }}</div>
+        <h3>{{ s }}</h3>
+        <p>{{ blurbs[loop.index0 % blurbs|length] }}</p>
+      </div>
+      {% endfor %}
+    </div>
   </div>
 </section>
+{% endif %}
 
-<section class="contact" id="contact">
+{# ---------- 5. ABOUT ---------- #}
+<section class="about">
   <div class="wrap">
-    <h2>Find us</h2>
-    <div class="contact-grid" style="margin-top:30px">
-      <div class="info">
-        {% if biz.address %}<p><strong>Address</strong><br>{{ biz.address }}</p>{% endif %}
-        {% if biz.phone %}<p><strong>Phone</strong><br><a href="tel:{{ biz.phone }}">{{ biz.phone }}</a></p>{% endif %}
-        {% if biz.email %}<p><strong>Email</strong><br><a href="mailto:{{ biz.email }}">{{ biz.email }}</a></p>{% endif %}
-        {% if biz.instagram %}<p><strong>Instagram</strong><br>{{ biz.instagram }}</p>{% endif %}
-        <p><strong>Hours</strong><br>Mon–Sat 9:00–17:00 · Sun by appointment</p>
+    <div class="about-inner">
+      <div class="about-art" aria-hidden="true">
+        <div class="quote">
+          &ldquo;Somewhere that feels like home.&rdquo;
+          <span>— what people say about {{ biz.name }}</span>
+        </div>
       </div>
-      <div class="map"><a href="{{ map_url }}" target="_blank" rel="noopener">Open in maps →</a></div>
+      <div class="about-text">
+        <p class="eyebrow">Our story</p>
+        <h2>A warm welcome, every time</h2>
+        {% if biz.description %}
+        <p>{{ biz.description }}</p>
+        <p>Whether you're a regular or stopping by for the first time, there's always a friendly face waiting at {{ biz.name }}.</p>
+        {% else %}
+        <p>{{ biz.name }} is{% if biz.city %} a much-loved {{ category }} in {{ biz.city }}{% else %} a much-loved local {{ category }}{% endif %}, built on the simple things done well: genuine warmth, real care, and the kind of welcome that makes you want to come back.</p>
+        <p>Every detail — from the moment you walk in to the moment you leave — is here to make you feel right at home.</p>
+        {% endif %}
+        <div class="pills">
+          {% if services %}
+            {% for s in services[:4] %}<span class="pill">{{ s }}</span>{% endfor %}
+          {% else %}
+            <span class="pill">Friendly faces</span>
+            <span class="pill">Local &amp; loved</span>
+            {% if biz.city %}<span class="pill">Proudly {{ biz.city }}</span>{% endif %}
+          {% endif %}
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
+{# ---------- 6. OPENING HOURS ---------- #}
+{% if hours %}
+<section class="hours">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Opening hours</p>
+      <h2>When to find us</h2>
+      <p class="lead">Pop in any time we're open — the kettle's always on.</p>
+    </div>
+    <div class="hours-card">
+      {% for h in hours %}
+      <div class="hours-row">
+        <span class="day">{{ h.day }}</span>
+        <span class="time">{{ h.time }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{# ---------- 7. CONTACT / FIND US ---------- #}
+<section class="contact" id="contact">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Find us</p>
+      <h2>Come say hello</h2>
+      <p class="lead">We'd love to welcome you to {{ biz.name }}{% if biz.city %} in {{ biz.city }}{% endif %}.</p>
+    </div>
+    <div class="contact-grid">
+      <div class="info">
+        {% if biz.address %}
+        <div class="info-item">
+          <div class="ic2" aria-hidden="true">📍</div>
+          <div><div class="k">Address</div><div class="v">{{ biz.address }}</div></div>
+        </div>
+        {% endif %}
+        {% if biz.phone %}
+        <div class="info-item">
+          <div class="ic2" aria-hidden="true">📞</div>
+          <div><div class="k">Phone</div><div class="v"><a href="tel:{{ biz.phone }}">{{ biz.phone }}</a></div></div>
+        </div>
+        {% endif %}
+        {% if biz.email %}
+        <div class="info-item">
+          <div class="ic2" aria-hidden="true">✉️</div>
+          <div><div class="k">Email</div><div class="v"><a href="mailto:{{ biz.email }}">{{ biz.email }}</a></div></div>
+        </div>
+        {% endif %}
+        {% if not biz.address and not biz.phone and not biz.email %}
+        <div class="info-item">
+          <div class="ic2" aria-hidden="true">👋</div>
+          <div><div class="k">Say hello</div><div class="v">We're just around the corner{% if biz.city %} in {{ biz.city }}{% endif %} — drop by any time.</div></div>
+        </div>
+        {% endif %}
+
+        {% if biz.instagram or biz.facebook %}
+        <div class="socials">
+          {% if biz.instagram %}
+          <a class="social" href="{% if 'http' in biz.instagram %}{{ biz.instagram }}{% else %}https://instagram.com/{{ biz.instagram|replace('@','') }}{% endif %}" target="_blank" rel="noopener">📸 Instagram</a>
+          {% endif %}
+          {% if biz.facebook %}
+          <a class="social" href="{% if 'http' in biz.facebook %}{{ biz.facebook }}{% else %}https://facebook.com/{{ biz.facebook }}{% endif %}" target="_blank" rel="noopener">👍 Facebook</a>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="map">
+        <div class="pin" aria-hidden="true"></div>
+        <a class="maplink" href="{{ map_url }}" target="_blank" rel="noopener">Open in maps →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ---------- 8. FOOTER ---------- #}
 <footer>
   <div class="wrap">
-    <p>© {{ year }} {{ biz.name }}. Sample website designed by
-       <a href="{{ booking_url }}">{{ brand.name }}</a>.</p>
-    <p style="margin-top:8px"><a href="{{ booking_url }}">Like this? Book a 30-minute call →</a></p>
+    <div class="foot-grid">
+      <div>
+        <div class="foot-brand">{{ biz.name }}</div>
+        {% if biz.category or biz.city %}
+        <div style="margin-top:6px;font-size:14px">{{ biz.category }}{% if biz.category and biz.city %} · {% endif %}{{ biz.city }}</div>
+        {% endif %}
+      </div>
+      <a class="foot-cta" href="{{ booking_url }}">Like this? Book a 30-minute call →</a>
+    </div>
+    <div class="foot-meta">
+      <span>© {{ year }} {{ biz.name }}. All rights reserved.</span>
+      <span>Sample website crafted by <a href="{{ booking_url }}">{{ brand.name or 'Shiftora' }}</a></span>
+    </div>
   </div>
 </footer>
+
+{# ---------- mobile sticky CTA (JS-enhanced, hidden by default) ---------- #}
+<div class="sticky-cta" id="stickyCta" role="complementary" aria-label="Contact shortcut">
+  <div class="t">{{ biz.name }}<small>Get in touch today</small></div>
+  {% if biz.phone %}<a href="tel:{{ biz.phone }}">Call now</a>{% else %}<a href="#contact">Contact</a>{% endif %}
+</div>
+
+<script>
+  // Progressive enhancement only — the page is fully usable with JS disabled.
+  (function(){
+    var nav = document.getElementById('nav');
+    var sticky = document.getElementById('stickyCta');
+    var contact = document.getElementById('contact');
+    function onScroll(){
+      var y = window.pageYOffset || document.documentElement.scrollTop;
+      if(nav){ nav.classList.toggle('scrolled', y > 8); }
+      if(sticky){
+        var nearContact = contact && contact.getBoundingClientRect().top < window.innerHeight * 0.85;
+        sticky.classList.toggle('show', y > 480 && !nearContact);
+      }
+    }
+    window.addEventListener('scroll', onScroll, {passive:true});
+    onScroll();
+  })();
+</script>
 
 </body>
 </html>

@@ -88,6 +88,17 @@ cat  outbox/review_queue.csv    # who/what/where, as a spreadsheet
 Useful flags: `--source osm|apollo|manual|all`, `--limit N`,
 `--unsubscribe email@x.com` (adds to the suppression list).
 
+Run the test suite (no network, ~0.1s):
+
+```bash
+pip install -r requirements-dev.txt
+pytest -q          # 19 unit tests: dedup, suppression, country gate, rotation, rendering
+```
+
+> Tip: set `SELLER_STATE_DIR` / `SELLER_PREVIEWS_DIR` to throwaway paths when
+> experimenting, so your dry runs never touch the committed `state/` or
+> `previews/`.
+
 ---
 
 ## Going live on GitHub Actions (free 5am cron)
@@ -129,6 +140,11 @@ run, so dedup/suppression and your live sites persist for free.
 ---
 
 ## Sending email (the cheap-but-not-always-free part)
+
+> **➡️ Full step-by-step setup is in [GO_LIVE.md](GO_LIVE.md)** — a 9-step,
+> copy-pasteable guide that takes you from review mode to live auto-send using
+> only free tools (Cal.com Free + Brevo Free), with the exact DNS records, the
+> Gmail/Yahoo 2024+ rules, a 3-week warm-up ramp, and a one-switch rollback.
 
 You said you'll handle paid sending manually — so the default is **review mode**
 (drafts you send yourself). To automate it cheaply:
@@ -180,7 +196,11 @@ Service breach — this tool uses OSM/official APIs instead and you should too.
 
 - **OpenStreetMap** (`config.yaml → osm`): set `areas` (free-text place names)
   and `categories` (`amenity=cafe`, `shop=hairdresser`, …). Pulls businesses
-  with **no `website` tag**. Rotate areas so you don't rescan the same place.
+  with **no `website` tag that DO publish an email** (so they're contactable).
+  **Daily rotation** is automatic: with `rotate: true` and `areas_per_run: N`,
+  each run scans a fresh slice of the `areas` list and cycles through all of
+  them over successive days — no rescanning, no manual rotation. Queries retry
+  across several Overpass mirrors for reliability.
 - **Apollo** (`config.yaml → apollo`): set `enabled: true` + `APOLLO_API_KEY`.
   Best for B2B (dentists, law firms). Free tier credits are limited.
 - **Manual CSV** (`leads_manual.csv`): the practical high-quality path. Columns
@@ -198,9 +218,19 @@ All behaviour is in **`config.yaml`** (safe to edit, no secrets). Secrets go in
 - `brand.*` — your name, from-email, **postal_address** (legally required),
   **booking_url** (Cal.com), **previews_base_url** (your Pages URL).
 - `targeting.allowed_countries`, `targeting.max_outreach_per_run` (start low).
-- `osm.areas`, `osm.categories`, `osm.require_email`.
+- `osm.areas`, `osm.categories`, `osm.rotate`, `osm.areas_per_run`.
 - `verification.use_hunter`, `verification.require_mx`.
 - `sending.mode` (`review`/`auto`), `sending.delay_seconds`.
+
+## What each prospect gets
+
+A **personalized, category-themed one-page site** (a café looks warm, a law firm
+sharp), filled with their **real** scraped data — name, opening hours, cuisine,
+address, phone, Instagram/Facebook — with a "make it yours → book a call" ribbon.
+All inline CSS, no external assets, fully responsive, served free on GitHub Pages.
+The **outreach email** picks one of several cohesive copy variants (chosen by a
+hash of the address, so wording varies naturally across recipients) and always
+carries the booking CTA, a real postal address, and a working unsubscribe.
 
 ---
 
@@ -227,13 +257,17 @@ All behaviour is in **`config.yaml`** (safe to edit, no secrets). Secrets go in
 ```
 run.py                      # daily entrypoint / orchestrator
 config.yaml                 # all settings (edit me)
+GO_LIVE.md                  # step-by-step guide to switch on auto-send
 .env.example                # secrets template (copy to .env)
+requirements.txt            # runtime deps  ·  requirements-dev.txt = pytest
 leads_manual.csv            # drop your own/Apollo-MCP leads here
 seller/
-  config.py  state.py  compliance.py  enrich.py  website.py  sender.py
+  config.py  state.py  compliance.py  enrich.py
+  website.py  outreach.py  sender.py
   sources/   osm.py  apollo.py  manual.py
   templates/ site/index.html.j2  site/gallery.html.j2
              email/outreach.html.j2  email/outreach.txt
+tests/      test_pipeline.py   # 19 no-network unit tests
 previews/                   # generated sample sites (served by Pages)
 state/                      # sent.csv + suppression.csv (committed each run)
 outbox/                     # local .eml drafts in review mode (gitignored)
