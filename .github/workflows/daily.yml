@@ -21,6 +21,9 @@ jobs:
   outreach:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      # "auto" only when you've set the SEND_MODE secret to auto. Otherwise review.
+      SEND_MODE: ${{ secrets.SEND_MODE }}
     steps:
       - uses: actions/checkout@v4
 
@@ -32,10 +35,23 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
 
-      - name: Run tests (safety gate — a failure stops the run before any send)
+      # Always run the tests — they're the safety gate before any send, and they
+      # need no network or secrets.
+      - name: Run tests (safety gate)
         run: pytest -q
 
+      # IMPORTANT — why the guard below:
+      # In *review* mode the pipeline writes .eml drafts to the runner's outbox/
+      # (git-ignored, and they MUST stay private — they contain prospect emails).
+      # A *scheduled* cloud run in review mode would therefore build drafts that
+      # are thrown away when the runner is destroyed, yet still mark those
+      # prospects as contacted (dedup) — silently burning leads you never emailed.
+      # So scheduled runs only do real work once you've gone live (SEND_MODE=auto).
+      # While in review mode, run the pipeline LOCALLY to get drafts you can send
+      # by hand (python run.py -> open outbox/*.eml). You can still trigger a
+      # manual cloud run any time from the Actions tab to test the cloud path.
       - name: Run pipeline
+        if: ${{ github.event_name == 'workflow_dispatch' || env.SEND_MODE == 'auto' }}
         env:
           HUNTER_API_KEY: ${{ secrets.HUNTER_API_KEY }}
           APOLLO_API_KEY: ${{ secrets.APOLLO_API_KEY }}
@@ -45,18 +61,25 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
           FROM_NAME: ${{ secrets.FROM_NAME }}
-          # Defaults to "review" if the secret is unset. Set to "auto" to send.
-          SEND_MODE: ${{ secrets.SEND_MODE }}
         run: python run.py
 
       - name: Commit state + generated sites
+        if: ${{ github.event_name == 'workflow_dispatch' || env.SEND_MODE == 'auto' }}
         run: |
           git config user.name "website-seller-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add state previews runs 2>/dev/null || true
+          git add state previews 2>/dev/null || true
           if ! git diff --cached --quiet; then
             git commit -m "chore: daily run $(date -u +%FT%TZ)"
             git push
           else
             echo "No changes to commit."
           fi
+
+      - name: Review-mode notice (scheduled run skipped real work)
+        if: ${{ github.event_name == 'schedule' && env.SEND_MODE != 'auto' }}
+        run: |
+          echo "SEND_MODE is not 'auto' — this scheduled run only ran the tests."
+          echo "In review mode, run the pipeline locally to get drafts you can send by hand:"
+          echo "    python run.py        # drafts -> outbox/*.eml"
+          echo "When ready to go live, set the SEND_MODE secret to 'auto' (see GO_LIVE.md)."

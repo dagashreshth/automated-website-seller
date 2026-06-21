@@ -130,12 +130,26 @@ Then, in the new repo:
    your local 5am. Default is `05:27 UTC`.
 4. **Test it**: Actions tab → *Daily outreach* → *Run workflow*.
 5. **Go auto** only when ready: set the `SEND_MODE` secret to `auto` and add
-   the `SMTP_*` secrets. Until then it runs in safe **review** mode (builds
-   sites, records leads, sends nothing — drafts live only on the runner, so the
-   committed `runs/*.json` is your record).
+   the `SMTP_*` secrets (see **[GO_LIVE.md](GO_LIVE.md)**).
 
-The workflow commits `state/`, `previews/`, and `runs/` back to the repo each
-run, so dedup/suppression and your live sites persist for free.
+> **Review mode is a LOCAL workflow.** Scheduled cloud runs only do real work
+> once `SEND_MODE=auto`. Why: in review mode the pipeline writes `.eml` drafts
+> to the runner's `outbox/` — which **must stay private** (they contain prospect
+> emails) and are destroyed with the runner. A scheduled review-mode run would
+> build throwaway drafts yet still mark those prospects contacted, **burning
+> leads you never emailed**. So while in review mode, **run it locally** to get
+> drafts you can send by hand:
+>
+> ```bash
+> python run.py            # finds leads, builds sites, writes outbox/*.eml
+> open outbox/             # open each .eml in Mail and send the good ones
+> ```
+>
+> (You can still trigger a manual cloud run from the Actions tab any time to
+> test the cloud path — that always runs.) When you flip to `auto`, the daily
+> cron sends for real and commits `state/` + `previews/` back to the repo.
+
+The scheduled run always runs the **tests** as a health check, even in review mode.
 
 ---
 
