@@ -1,23 +1,25 @@
 <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#1d2433;font-size:16px;line-height:1.6;max-width:560px;margin:0 auto">
   <p>{{ greeting }}</p>
 
-  {% if paras %}<p>{{ paras[0] }}</p>{% endif %}
+  <p>{{ intro }}</p>
 
-  <p style="text-align:center;margin:28px 0">
+  <p>{{ link_lead }}<br>
+    <a href="{{ preview_url }}" style="color:#2a5db0;font-weight:600;word-break:break-all">{{ preview_url }}</a>
+  </p>
+
+  <p style="text-align:center;margin:26px 0">
     <a href="{{ preview_url }}"
-       style="background:#c9893f;color:#fff;padding:14px 28px;border-radius:999px;
+       style="background:#2a5db0;color:#fff;padding:13px 26px;border-radius:8px;
               text-decoration:none;font-weight:700;display:inline-block">
-      {{ cta }} →
+      Open the sample website →
     </a>
   </p>
 
-  {% for p in paras[1:] %}<p>{{ p }}</p>{% endfor %}
+  <p>{{ price_line }}</p>
 
-  <p style="margin:18px 0">
-    <a href="{{ booking_url }}" style="color:#a96f2c;font-weight:600">Book a 30-minute call →</a>
-  </p>
+  <p>{{ cta_line }}</p>
 
-  <p>Cheers,<br>{{ founder }}<br><span style="color:#5b6577">{{ brand.name }}</span></p>
+  <p style="margin-top:22px">Cheers,<br>{{ founder }} / {{ brand.name }}</p>
 
   {{ footer_html | safe }}
 </div>

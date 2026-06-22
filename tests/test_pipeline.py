@@ -78,17 +78,40 @@ def test_parse_hours_common_shapes():
 
 
 # ------------------------------------------------------------------- theming
+def _cafe_accents():
+    return {website.PALETTES[n]["accent"] for n in ("coffee", "coffee2")}
+
+
 def test_build_context_picks_category_theme():
     ctx = website.build_context(SAMPLE, CFG)
-    assert ctx["theme"]["accent"] == website.PALETTES["coffee"]["accent"]
-    assert ctx["services"]  # non-empty
+    # café maps to one of its palette options (chosen per-business by a hash)
+    assert ctx["theme"]["accent"] in _cafe_accents()
+    assert ctx["service_cards"]  # non-empty
+    assert all(c.get("title") and c.get("blurb") for c in ctx["service_cards"])
     assert ctx["hours"]     # parsed
     assert ctx["theme"]["ink"] and ctx["theme"]["hero_from"]
 
 
 def test_unknown_category_falls_back_to_default_theme():
     ctx = website.build_context(EMPTY, CFG)
-    assert ctx["theme"]["accent"] == website.PALETTES["default"]["accent"]
+    default_accents = {website.PALETTES[n]["accent"]
+                       for n in ("default", "default2", "calm2", "steel")}
+    assert ctx["theme"]["accent"] in default_accents
+
+
+def test_brand_colors_drive_a_legible_derived_palette():
+    p = dict(SAMPLE)
+    p["brand_colors"] = {"primary": "#1e88e5"}  # a brand blue
+    theme = website.build_context(p, CFG)["theme"]
+    for key in ("accent", "accent_dark", "ink", "soft", "hero_from", "hero_to"):
+        assert theme[key].startswith("#") and len(theme[key]) == 7
+    # hero background must stay dark enough for white text
+    assert sum(website._hex_to_rgb(theme["hero_from"])) / 3 < 0.4
+
+
+def test_palette_name_override_is_respected():
+    p = dict(SAMPLE); p["palette_name"] = "vino"
+    assert website.build_context(p, CFG)["theme"]["accent"] == website.PALETTES["vino"]["accent"]
 
 
 # ----------------------------------------------------- template renders (no I/O)
@@ -96,35 +119,67 @@ def test_site_template_renders_full_and_empty():
     tmpl = website._env.get_template("site/index.html.j2")
     full = tmpl.render(**website.build_context(SAMPLE, CFG))
     assert "The Blue Wren Café" in full
-    assert "make it yours" in full
-    assert CFG["brand"]["booking_url"] in full
+    # the studio's note now lives quietly in the footer, not a top ribbon
+    assert "Free sample site by Shiftora" in full
+    # NO fabricated trust signals anywhere
+    assert "Loved by locals" not in full
+    assert "★★★★★" not in full
+    # no booking/calendar link on the prospect's own site
+    assert "cal.com" not in full
     # an almost-empty lead must still render without raising
     empty = tmpl.render(**website.build_context(EMPTY, CFG))
     assert "Nameless Co" in empty
 
 
+def test_real_reviews_render_only_when_present():
+    tmpl = website._env.get_template("site/index.html.j2")
+    no_rev = tmpl.render(**website.build_context(SAMPLE, CFG))
+    assert "What customers say" not in no_rev
+    p = dict(SAMPLE)
+    p["reviews"] = [{"text": "Best flat white in town.", "author": "Jo M.",
+                     "source": "Google"}]
+    with_rev = tmpl.render(**website.build_context(p, CFG))
+    assert "What customers say" in with_rev
+    assert "Best flat white in town." in with_rev
+
+
+def test_injected_copy_is_used():
+    p = dict(SAMPLE)
+    p["copy"] = {
+        "hero_headline": "The friendliest corner cafe in Fremantle",
+        "hero_sub": "Single-origin coffee and house-baked pastries since 2014.",
+        "services": [{"title": "Single-Origin Coffee", "blurb": "Roasted locally."}],
+        "about": ["We opened our doors in 2014."],
+    }
+    out = website._env.get_template("site/index.html.j2").render(**website.build_context(p, CFG))
+    assert "The friendliest corner cafe in Fremantle" in out
+    assert "Single-origin coffee and house-baked pastries since 2014." in out
+    assert "We opened our doors in 2014." in out
+
+
+def test_slug_override_keeps_published_urls_stable():
+    p = dict(SAMPLE); p["slug"] = "the-blue-wren-cafe-dda331"
+    assert website._unique_slug(p) == "the-blue-wren-cafe-dda331"
+
+
 # ----------------------------------------------------------- email/outreach copy
-def test_every_outreach_variant_formats_cleanly():
-    sub = {"name": "X", "city": "Y", "category": "café", "where": " in Y",
-           "founder": "Shresh", "location": "Dubai", "brand": "Shiftora",
-           "price": "$399"}
-    for v in outreach.VARIANTS:
-        v["subject"].format(**sub)
-        v["greeting"].format(**sub)
-        v["cta"].format(**sub)
-        for p in v["paras"]:
-            p.format(**sub)
+def test_subject_is_short_nameless_and_clean():
+    assert len(outreach.SUBJECT.split()) < 6
+    assert "—" not in outreach.SUBJECT and "–" not in outreach.SUBJECT
+    assert SAMPLE["name"] not in outreach.SUBJECT
 
 
-def test_variant_pick_is_deterministic():
-    assert outreach._pick("a@b.com", 4) == outreach._pick("a@b.com", 4)
-
-
-def test_render_email_substitutes_and_includes_links():
+def test_render_email_substitutes_and_excludes_booking_link():
     subject, html, text = website.render_email(SAMPLE, CFG, "https://prev/url/")
-    assert "Blue Wren" in subject
+    assert subject == outreach.SUBJECT
+    assert "The Blue Wren Café" in text and "The Blue Wren Café" in html
     assert "https://prev/url/" in text and "https://prev/url/" in html
-    assert CFG["brand"]["booking_url"] in text
+    assert "$299" in text
+    # no calendar/booking link anywhere in the email
+    assert CFG["brand"]["booking_url"] not in text
+    assert "cal.com" not in text and "cal.com" not in html
+    # personal sign-off
+    assert "Shreshth / Shiftora" in text and "Shreshth / Shiftora" in html
     # compliance footer present in both parts
     assert CFG["brand"]["postal_address"] in text
     assert CFG["brand"]["postal_address"] in html

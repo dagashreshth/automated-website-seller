@@ -11,11 +11,21 @@ venv/
 # Local drafts written in review mode (contain prospect data; keep out of git)
 outbox/*.eml
 outbox/review_queue.csv
+outbox/*.md
+outbox/*.json
+
+# Per-run summary docs (list recipient addresses; keep local only)
+RUN_*.md
 
 # Logs / scratch
 *.log
 runs/*.json
 .DS_Store
+
+# One-off batch tooling + research scratch for the upgrade run. The data files
+# (osm pool, selected prospects, per-business enrichment) contain raw prospect
+# emails, so this whole dir stays out of the public repo.
+tools/
 
 # NOTE: state/ and previews/ are intentionally NOT ignored.
 #   state/    -> dedup + suppression lists must persist across runs (committed by the Action)
