@@ -420,6 +420,127 @@ def _highlights(prospect: dict, hours: list) -> list[str]:
     return out[:3]
 
 
+# Category-aware primary call-to-action. (label, kind) — kind drives the link:
+# book/enquire/order -> call the shop if we have a number, else scroll to
+# contact; visit -> scroll to contact/map; call -> tel; email -> mailto.
+_CTA_DEFAULTS = {
+    "hair salon": ("Book an appointment", "book"),
+    "beauty salon": ("Book an appointment", "book"),
+    "massage studio": ("Book a session", "book"),
+    "tattoo studio": ("Enquire about a tattoo", "enquire"),
+    "gym": ("Start with a free session", "enquire"),
+    "dental practice": ("Book a check-up", "book"),
+    "clinic": ("Book an appointment", "book"),
+    "veterinary clinic": ("Book an appointment", "book"),
+    "café": ("Plan your visit", "visit"),
+    "bakery": ("Plan your visit", "visit"),
+    "restaurant": ("Book a table", "book"),
+    "eatery": ("Plan your visit", "visit"),
+    "bar": ("Book a table", "book"),
+    "pub": ("Book a table", "book"),
+    "winery": ("Plan a tasting", "book"),
+    "deli": ("Visit the shop", "visit"),
+    "butcher": ("Place an order", "order"),
+    "grocer": ("Visit the shop", "visit"),
+    "caterer": ("Request a quote", "enquire"),
+    "florist": ("Order flowers", "order"),
+    "bookshop": ("Visit the shop", "visit"),
+    "boutique": ("Visit the shop", "visit"),
+    "gift shop": ("Visit the shop", "visit"),
+    "jewellery shop": ("Visit the shop", "visit"),
+    "shoe shop": ("Visit the shop", "visit"),
+    "pet shop": ("Visit the shop", "visit"),
+    "dressmaker": ("Get a quote", "enquire"),
+    "dry cleaner": ("Get a quote", "enquire"),
+    "electronics repair": ("Get a repair quote", "enquire"),
+    "auto shop": ("Book a service", "book"),
+    "optician": ("Book an eye test", "book"),
+    "photography studio": ("Enquire about a shoot", "enquire"),
+}
+
+_CTA_HEADINGS = {
+    "book": "Ready to book?",
+    "enquire": "Get in touch",
+    "order": "Place an order",
+    "visit": "Come and see us",
+    "call": "Give us a call",
+    "email": "Drop us a line",
+}
+
+
+def _cta(prospect: dict, category: str) -> dict:
+    """Return {label, href, kind, heading} for the primary call to action."""
+    c = prospect.get("cta") or {}
+    label = c.get("label")
+    kind = c.get("kind") or c.get("type")
+    if not label or not kind:
+        d_label, d_kind = _CTA_DEFAULTS.get(category, ("Get in touch", "enquire"))
+        label = label or d_label
+        kind = kind or d_kind
+    phone = prospect.get("phone")
+    email = prospect.get("email")
+    if kind in ("call", "book", "enquire", "order") and phone:
+        href = f"tel:{phone}"
+    elif kind == "email" and email:
+        href = f"mailto:{email}"
+    else:
+        href = "#contact"
+    return {"label": label, "href": href, "kind": kind,
+            "heading": _CTA_HEADINGS.get(kind, "Get in touch")}
+
+
+def _menu(prospect: dict) -> dict | None:
+    """Normalise an optional menu / price list into {title, note, groups:[{name,
+    items:[{name, desc, price}]}]}. Accepts a flat item list too."""
+    m = prospect.get("menu")
+    if not isinstance(m, dict):
+        return None
+    raw_groups = m.get("groups")
+    if not raw_groups and isinstance(m.get("items"), list):
+        raw_groups = [{"name": "", "items": m["items"]}]
+    if not isinstance(raw_groups, list):
+        return None
+    groups = []
+    for g in raw_groups:
+        if not isinstance(g, dict):
+            continue
+        items = []
+        for it in (g.get("items") or []):
+            if isinstance(it, dict) and it.get("name"):
+                items.append({"name": str(it["name"]),
+                              "desc": str(it.get("desc", "") or ""),
+                              "price": str(it.get("price", "") or "")})
+            elif isinstance(it, str) and it.strip():
+                items.append({"name": it.strip(), "desc": "", "price": ""})
+        if items:
+            groups.append({"name": str(g.get("name", "") or ""), "items": items})
+    if not groups:
+        return None
+    return {"title": str(m.get("title") or "What we offer"),
+            "note": str(m.get("note", "") or ""), "groups": groups}
+
+
+def _steps(prospect: dict) -> dict | None:
+    """Optional 'how it works' steps -> {title, items:[{title, desc}]}."""
+    s = prospect.get("steps")
+    if not isinstance(s, dict):
+        return None
+    items = []
+    for it in (s.get("items") or []):
+        if isinstance(it, dict) and it.get("title"):
+            items.append({"title": str(it["title"]), "desc": str(it.get("desc", "") or "")})
+    if not items:
+        return None
+    return {"title": str(s.get("title") or "How it works"), "items": items[:5]}
+
+
+def _good_to_know(prospect: dict) -> list[str]:
+    gtk = prospect.get("good_to_know")
+    if not isinstance(gtk, list):
+        return []
+    return [str(x).strip() for x in gtk if str(x).strip()][:6]
+
+
 def build_context(prospect: dict, cfg: dict) -> dict:
     category = (prospect.get("category") or "local business").lower()
     theme = _resolve_theme(prospect, category)
@@ -434,6 +555,10 @@ def build_context(prospect: dict, cfg: dict) -> dict:
         "brand": brand,
         "theme": theme,
         "service_cards": _service_cards(prospect, category),
+        "menu": _menu(prospect),
+        "steps": _steps(prospect),
+        "good_to_know": _good_to_know(prospect),
+        "cta": _cta(prospect, category),
         "hours": hours,
         "headline": copy.get("hero_headline") or prospect.get("name", ""),
         "hero_kicker": copy.get("hero_kicker", ""),

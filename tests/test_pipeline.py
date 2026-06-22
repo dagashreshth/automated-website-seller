@@ -162,6 +162,39 @@ def test_slug_override_keeps_published_urls_stable():
     assert website._unique_slug(p) == "the-blue-wren-cafe-dda331"
 
 
+def test_cta_is_category_aware_and_uses_phone():
+    # a salon with a phone -> "book" CTA that dials the shop
+    p = {"name": "Snip", "category": "hair salon", "phone": "+61 8 1234"}
+    cta = website.build_context(p, CFG)["cta"]
+    assert cta["kind"] == "book" and cta["href"] == "tel:+61 8 1234"
+    # a bookshop with no phone -> "visit" CTA that scrolls to contact
+    p2 = {"name": "Pages", "category": "bookshop"}
+    cta2 = website.build_context(p2, CFG)["cta"]
+    assert cta2["kind"] == "visit" and cta2["href"] == "#contact"
+
+
+def test_menu_steps_gtk_render_only_when_present():
+    tmpl = website._env.get_template("site/index.html.j2")
+    plain = tmpl.render(**website.build_context(SAMPLE, CFG))
+    # the section markup (not the always-present CSS) is absent without data
+    assert '<section class="menu">' not in plain
+    assert '<div class="steps-grid">' not in plain
+    assert '<section class="gtk">' not in plain
+    # cta band always present
+    assert '<section class="cta-band">' in plain
+    p = dict(SAMPLE)
+    p["menu"] = {"title": "Our coffee", "groups": [
+        {"name": "Coffee", "items": [{"name": "Flat white", "price": "$5"}]}]}
+    p["steps"] = {"title": "How to order", "items": [{"title": "Walk in", "desc": "Grab a seat."}]}
+    p["good_to_know"] = ["Dog-friendly", "EFTPOS & cash"]
+    full = tmpl.render(**website.build_context(p, CFG))
+    assert '<section class="menu">' in full
+    # menu items use bracket access (not the dict.items method) -> real item shows
+    assert "Our coffee" in full and "Flat white" in full and "$5" in full
+    assert '<div class="steps-grid">' in full and "How to order" in full and "Walk in" in full
+    assert '<section class="gtk">' in full and "Dog-friendly" in full
+
+
 # ----------------------------------------------------------- email/outreach copy
 def test_subject_is_short_nameless_and_clean():
     assert len(outreach.SUBJECT.split()) < 6
