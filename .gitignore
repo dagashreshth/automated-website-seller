@@ -14,8 +14,9 @@ outbox/review_queue.csv
 outbox/*.md
 outbox/*.json
 
-# Per-run summary docs (list recipient addresses; keep local only)
+# Per-run summary / upgrade reports (internal working docs; keep local only)
 RUN_*.md
+UPGRADE_*.md
 
 # Logs / scratch
 *.log
