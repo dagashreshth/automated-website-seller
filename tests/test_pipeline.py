@@ -180,9 +180,12 @@ def test_render_email_substitutes_and_excludes_booking_link():
     assert "cal.com" not in text and "cal.com" not in html
     # personal sign-off
     assert "Shreshth / Shiftora" in text and "Shreshth / Shiftora" in html
-    # compliance footer present in both parts
-    assert CFG["brand"]["postal_address"] in text
-    assert CFG["brand"]["postal_address"] in html
+    # NO postal address line anywhere (removed by request)
+    assert CFG["brand"]["postal_address"] not in text
+    assert CFG["brand"]["postal_address"] not in html
+    assert "POSTAL ADDRESS" not in text.upper() and "POSTAL ADDRESS" not in html.upper()
+    # sender id + unsubscribe still present (deliverability + opt-out)
+    assert "info@shiftora.ai" in text and "Unsubscribe" in html
 
 
 # ------------------------------------------------------------- state / privacy
@@ -226,7 +229,9 @@ def test_unsubscribe_link_and_footer():
     link = compliance.unsubscribe_link("a@b.com", CFG)
     assert link.startswith("mailto:info@shiftora.ai")
     assert "UNSUBSCRIBE" in link
-    assert CFG["brand"]["postal_address"] in compliance.footer_text(CFG, "a@b.com")
+    # postal address line removed; sender id + unsubscribe remain
+    assert CFG["brand"]["postal_address"] not in compliance.footer_text(CFG, "a@b.com")
+    assert "info@shiftora.ai" in compliance.footer_text(CFG, "a@b.com")
     assert "Unsubscribe" in compliance.footer_html(CFG, "a@b.com")
 
 

@@ -13,9 +13,6 @@ brand:
   price: "$299"
   from_email: "info@shiftora.ai"
   reply_to: "info@shiftora.ai"
-  # REQUIRED for legal compliance (CAN-SPAM / Spam Act / CASL all mandate a
-  # real physical postal address in every marketing email). Put a real one.
-  postal_address: "REPLACE WITH YOUR REAL POSTAL ADDRESS"
   # Your free Cal.com 30-min booking link — becomes the email call-to-action.
   # See GO_LIVE.md step 1 to create one.
   booking_url: "https://cal.com/your-handle/30min"
