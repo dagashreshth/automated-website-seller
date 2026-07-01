@@ -267,12 +267,15 @@ def choose_email(emails: set[str], website_url: str) -> str:
     role_order = ("info@", "contact@", "hello@", "enquiries@", "enquiry@",
                   "bookings@", "booking@", "sales@", "office@", "admin@")
     ordered = sorted(emails)
+    same_domain = [e for e in ordered if e.split("@", 1)[1] == domain]
+    same_domain_role = [e for e in same_domain if e.startswith(role_order)]
+    if same_domain_role:
+        return same_domain_role[0]
+    if same_domain:
+        return same_domain[0]
     role = [e for e in ordered if e.startswith(role_order)]
     if role:
         return role[0]
-    same_domain = [e for e in ordered if e.split("@", 1)[1] == domain]
-    if same_domain:
-        return same_domain[0]
     return ordered[0]
 
 
