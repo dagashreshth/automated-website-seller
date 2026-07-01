@@ -16,6 +16,7 @@ import csv
 import re
 import smtplib
 import time
+from datetime import datetime, timezone
 from email.message import EmailMessage
 from pathlib import Path
 
@@ -25,7 +26,10 @@ from .config import has_smtp
 ROOT = Path(__file__).resolve().parent.parent
 OUTBOX = ROOT / "outbox"
 REVIEW_CSV = OUTBOX / "review_queue.csv"
-REVIEW_FIELDS = ["name", "email", "subject", "preview_url", "eml_path", "country", "source"]
+REVIEW_FIELDS = [
+    "name", "email", "phone", "website", "weakness_score", "website_issues",
+    "subject", "preview_url", "eml_path", "country", "source",
+]
 
 
 def _safe_name(prospect: dict) -> str:
@@ -56,7 +60,14 @@ def _write_draft(prospect: dict, msg: EmailMessage, subject: str,
     OUTBOX.mkdir(parents=True, exist_ok=True)
     eml_path = OUTBOX / f"{_safe_name(prospect)}.eml"
     eml_path.write_bytes(bytes(msg))
+    if REVIEW_CSV.exists():
+        lines = REVIEW_CSV.read_text(encoding="utf-8").splitlines()
+        first = lines[0].strip() if lines else ""
+        if first.split(",") != REVIEW_FIELDS:
+            ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+            REVIEW_CSV.rename(OUTBOX / f"review_queue_legacy_{ts}.csv")
     new_file = not REVIEW_CSV.exists()
+    audit = prospect.get("website_audit") or {}
     with open(REVIEW_CSV, "a", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=REVIEW_FIELDS)
         if new_file:
@@ -64,6 +75,10 @@ def _write_draft(prospect: dict, msg: EmailMessage, subject: str,
         writer.writerow({
             "name": prospect.get("name", ""),
             "email": prospect.get("email", ""),
+            "phone": prospect.get("phone", ""),
+            "website": prospect.get("website", ""),
+            "weakness_score": audit.get("weakness_score", ""),
+            "website_issues": ", ".join(audit.get("issues") or []),
             "subject": subject,
             "preview_url": preview_url,
             "eml_path": str(eml_path.relative_to(ROOT)),

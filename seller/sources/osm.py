@@ -1,15 +1,15 @@
 """OpenStreetMap lead source — FREE, no API key.
 
-Strategy (validated by research):
+Strategy:
   1. Geocode each target area name -> bounding box via Nominatim (free).
-  2. Query the Overpass API for businesses in that box that have NO website
-     tag, using the [!"website"] negation operator.
-  3. Keep the ones that publish an email (auto-emailable); the rest are
-     returned flagged no_email so the caller can log them for phone follow-up.
+  2. Query the Overpass API for businesses in that box that already publish an
+     official website tag.
+  3. Return those prospects for the website-audit stage, which extracts the
+     official email/phone from their site and keeps only weak websites.
 
-This is the coherent free engine for the whole product: it finds businesses
-that genuinely have no website AND publish a contact email, which is exactly
-who we can email a sample site to.
+The old campaign searched for businesses with no website. The new campaign is
+more deliverability-friendly: contact details come from the business's own site,
+and the offer is only made when the existing site looks weak enough to improve.
 
 Robustness:
   - Overpass public instances are flaky, so we retry across several mirrors.
@@ -119,31 +119,36 @@ def _selector(category: str) -> str:
     return f'["{key}"="{value}"]'
 
 
-def _build_query(bbox: tuple[float, float, float, float], categories: list[str]) -> str:
+def _build_query(
+    bbox: tuple[float, float, float, float],
+    categories: list[str],
+    require_website: bool = True,
+    timeout_seconds: int = 45,
+) -> str:
     s, w, n, e = bbox
     box = f"({s},{w},{n},{e})"
-    # No website tag in any of its common forms.
-    no_site = '[!"website"][!"contact:website"][!"contact:url"][!"url"]'
-    # Must publish a contact email in one of its common forms — this is what
-    # makes the prospect auto-emailable. (Done in Overpass to cut payload size.)
+    website_keys = ("website", "contact:website", "contact:url", "url")
     parts = []
     for cat in categories:
-        sel = _selector(cat) + no_site
         for kind in ("node", "way"):
-            parts.append(f'  {kind}{sel}["email"]{box};')
-            parts.append(f'  {kind}{sel}["contact:email"]{box};')
+            if require_website:
+                for key in website_keys:
+                    parts.append(f'  {kind}{_selector(cat)}["{key}"]{box};')
+            else:
+                # Compatibility escape hatch for manual sweeps/testing.
+                parts.append(f'  {kind}{_selector(cat)}{box};')
     body = "\n".join(parts)
-    return f"[out:json][timeout:90];\n(\n{body}\n);\nout tags center 400;"
+    return f"[out:json][timeout:{timeout_seconds}];\n(\n{body}\n);\nout tags center 400;"
 
 
-def _query_overpass(query: str, ua: str) -> list[dict]:
+def _query_overpass(query: str, ua: str, request_timeout: int = 45) -> list[dict]:
     """POST the query to each mirror in turn; return elements or []."""
     last = ""
     for url in OVERPASS_MIRRORS:
         try:
             resp = requests.post(
                 url, data={"data": query},
-                headers={"User-Agent": ua}, timeout=120,
+                headers={"User-Agent": ua}, timeout=(10, request_timeout),
             )
             if resp.status_code in (429, 504):  # busy/timeout -> next mirror
                 last = f"{url} -> HTTP {resp.status_code}"
@@ -181,6 +186,10 @@ def _to_prospect(el: dict, default_country: str) -> dict | None:
         return None
     email = (tags.get("email") or tags.get("contact:email") or "").strip().lower()
     phone = tags.get("phone") or tags.get("contact:phone") or ""
+    website = (
+        tags.get("website") or tags.get("contact:website") or
+        tags.get("contact:url") or tags.get("url") or ""
+    ).strip()
     addr_parts = [
         tags.get("addr:housenumber", ""), tags.get("addr:street", ""),
         tags.get("addr:suburb", ""), tags.get("addr:city", ""),
@@ -196,8 +205,9 @@ def _to_prospect(el: dict, default_country: str) -> dict | None:
         "name": name,
         "category": _label_for(tags),
         "email": email,
+        "email_source": "osm" if email else "",
         "phone": phone,
-        "website": None,
+        "website": website or None,
         "address": address,
         "city": tags.get("addr:city") or tags.get("addr:suburb", ""),
         "country": tags.get("addr:country") or default_country,
@@ -217,33 +227,43 @@ def find_prospects(cfg: dict) -> list[dict]:
         return []
     categories = osm_cfg.get("categories", [])
     max_per_area = int(osm_cfg.get("max_per_area", 60))
+    require_website = bool(osm_cfg.get("require_website", True))
+    require_email = bool(osm_cfg.get("require_email", False))
+    overpass_timeout = int(osm_cfg.get("overpass_timeout_seconds", 45))
     ua = _user_agent(cfg)
 
     out: list[dict] = []
     seen: set[str] = set()
     areas = select_areas(osm_cfg)
-    print(f"  [osm] scanning {len(areas)} area(s) this run: {', '.join(areas)}")
+    print(f"  [osm] scanning {len(areas)} area(s) this run: {', '.join(areas)}", flush=True)
     for area in areas:
-        print(f"  [osm] searching: {area}")
+        print(f"  [osm] searching: {area}", flush=True)
         geo = geocode_area(area, cfg)
         time.sleep(1.1)  # Nominatim: <=1 req/sec
         if not geo:
             continue
-        query = _build_query(geo["bbox"], categories)
-        elements = _query_overpass(query, ua)
+        query = _build_query(
+            geo["bbox"], categories, require_website=require_website,
+            timeout_seconds=overpass_timeout,
+        )
+        elements = _query_overpass(query, ua, request_timeout=overpass_timeout + 10)
 
         count = 0
         for el in elements:
             if count >= max_per_area:
                 break
             p = _to_prospect(el, geo["country"])
-            if not p or not p["email"]:
+            if not p:
+                continue
+            if require_website and not p.get("website"):
+                continue
+            if require_email and not p.get("email"):
                 continue
             if p["osm_id"] in seen:
                 continue
             seen.add(p["osm_id"])
             out.append(p)
             count += 1
-        print(f"  [osm] {area}: {count} emailable prospects (no website + published email)")
+        print(f"  [osm] {area}: {count} prospects with official websites", flush=True)
         time.sleep(1.0)
     return out

@@ -3,8 +3,8 @@
 The research could NOT confirm that fully-automated unsolicited email is lawful
 in the EU/EEA (Sweden, Finland), Canada (CASL), or Australia (Spam Act). The
 defensible posture this code enforces:
-  - contact published BUSINESS role addresses with a relevant offer (the
-    "inferred/implied consent" path under the Spam Act / CASL B2B exemption),
+  - contact published BUSINESS role addresses found on the business's own site
+    with a relevant offer,
   - identify the sender truthfully,
   - provide a working one-click unsubscribe, and honor it forever,
   - only ever contact allowed (high-income) countries,
@@ -15,14 +15,30 @@ from __future__ import annotations
 
 from urllib.parse import quote
 
+COUNTRY_ALIASES = {
+    "new zealand / aotearoa": "new zealand",
+    "united states of america": "united states",
+    "usa": "united states",
+    "uk": "united kingdom",
+    "england": "united kingdom",
+    "scotland": "united kingdom",
+    "wales": "united kingdom",
+    "northern ireland": "united kingdom",
+}
+
+
+def _norm_country(country: str) -> str:
+    value = (country or "").strip().lower()
+    return COUNTRY_ALIASES.get(value, value)
+
 
 def allowed_country(prospect: dict, allowed: list[str]) -> bool:
     country = (prospect.get("country") or "").strip()
     if not country:
         # Unknown country: be conservative and allow only if list is empty.
         return not allowed
-    allowed_lower = {c.strip().lower() for c in allowed}
-    return country.strip().lower() in allowed_lower
+    allowed_lower = {_norm_country(c) for c in allowed}
+    return _norm_country(country) in allowed_lower
 
 
 def unsubscribe_link(email: str, cfg: dict) -> str:
@@ -39,7 +55,7 @@ def footer_text(cfg: dict, recipient_email: str) -> str:
     return (
         f"\n\n--\n{b.get('name','')} | {b.get('from_email','')}\n"
         f"You received this one-time message because your business is publicly "
-        f"listed without a website. To never hear from us again, reply with "
+        f"listed with a business website/contact address. To never hear from us again, reply with "
         f"'UNSUBSCRIBE' or email {b.get('unsubscribe_email','')}.\n"
     )
 
@@ -52,7 +68,7 @@ def footer_html(cfg: dict, recipient_email: str) -> str:
         '<p style="font-size:12px;color:#888;line-height:1.5">'
         f"{b.get('name','')} &middot; {b.get('from_email','')}<br>"
         "You received this one-time message because your business is publicly "
-        "listed without a website. "
+        "listed with a business website/contact address. "
         f'<a href="{unsub}" style="color:#888">Unsubscribe</a>.'
         "</p>"
     )

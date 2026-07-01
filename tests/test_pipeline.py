@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from seller import compliance, enrich, outreach, website          # noqa: E402
+from seller import compliance, enrich, outreach, site_audit, website  # noqa: E402
 from seller.sources import osm                                     # noqa: E402
 from seller.state import _hash, is_suppressed, prospect_key, sent_id  # noqa: E402
 
@@ -23,6 +23,7 @@ CFG = {
     "brand": {
         "name": "Shiftora", "from_email": "info@shiftora.ai",
         "reply_to": "info@shiftora.ai",
+        "price": "$150",
         "postal_address": "12 Test St, Byron Bay NSW 2481, Australia",
         "booking_url": "https://cal.com/shiftora/30min",
         "unsubscribe_email": "info@shiftora.ai",
@@ -34,6 +35,7 @@ CFG = {
 SAMPLE = {
     "source": "osm", "osm_id": "node/1", "name": "The Blue Wren Café",
     "category": "café", "email": "hello@bluewren.com.au",
+    "email_source": "website", "website": "https://bluewren.com.au",
     "phone": "+61 8 1234 5678", "address": "1 High St, Fremantle",
     "city": "Fremantle", "country": "Australia", "lat": -32.05, "lon": 115.74,
     "instagram": "bluewren", "facebook": "bluewrencafe",
@@ -135,6 +137,7 @@ def test_real_reviews_render_only_when_present():
     tmpl = website._env.get_template("site/index.html.j2")
     no_rev = tmpl.render(**website.build_context(SAMPLE, CFG))
     assert "What customers say" not in no_rev
+    assert "what people say about" not in no_rev
     p = dict(SAMPLE)
     p["reviews"] = [{"text": "Best flat white in town.", "author": "Jo M.",
                      "source": "Google"}]
@@ -207,7 +210,9 @@ def test_render_email_substitutes_and_excludes_booking_link():
     assert subject == outreach.SUBJECT
     assert "The Blue Wren Café" in text and "The Blue Wren Café" in html
     assert "https://prev/url/" in text and "https://prev/url/" in html
-    assert "$299" in text
+    assert "$150" in text
+    assert "current website" in text
+    assert "doesn't have one yet" not in text
     # no calendar/booking link anywhere in the email
     assert CFG["brand"]["booking_url"] not in text
     assert "cal.com" not in text and "cal.com" not in html
@@ -250,6 +255,9 @@ def test_can_contact_country_and_suppression_and_no_email():
     blocked = dict(SAMPLE); blocked["country"] = "India"
     ok, reason = compliance.can_contact(blocked, CFG, set())
     assert not ok and "country_not_allowed" in reason
+    alias = dict(SAMPLE); alias["country"] = "United States of America"
+    ok, _ = compliance.can_contact(alias, CFG, set())
+    assert ok
     supp = {_hash(SAMPLE["email"])}
     ok, reason = compliance.can_contact(SAMPLE, CFG, supp)
     assert not ok and reason == "suppressed"
@@ -265,6 +273,7 @@ def test_unsubscribe_link_and_footer():
     # postal address line removed; sender id + unsubscribe remain
     assert CFG["brand"]["postal_address"] not in compliance.footer_text(CFG, "a@b.com")
     assert "info@shiftora.ai" in compliance.footer_text(CFG, "a@b.com")
+    assert "business website/contact address" in compliance.footer_text(CFG, "a@b.com")
     assert "Unsubscribe" in compliance.footer_html(CFG, "a@b.com")
 
 
@@ -276,15 +285,20 @@ def test_osm_selector_and_handle_and_label():
     assert osm._clean_handle("@handle") == "handle"
     assert osm._label_for({"amenity": "cafe"}) == "café"
     assert osm._label_for({"shop": "hairdresser"}) == "hair salon"
+    query = osm._build_query((1, 2, 3, 4), ["amenity=cafe"])
+    assert '["website"]' in query
+    assert '[!"website"]' not in query
 
 
 def test_osm_to_prospect_requires_name_and_extracts_fields():
     el = {"type": "node", "id": 7, "lat": 1.0, "lon": 2.0, "tags": {
         "name": "Joe's", "amenity": "cafe", "contact:email": "Joe@Joes.com",
+        "website": "https://joes.example",
         "opening_hours": "Mo-Fr 09:00-17:00", "cuisine": "coffee",
         "contact:instagram": "https://instagram.com/joes"}}
     p = osm._to_prospect(el, "Australia")
     assert p["name"] == "Joe's" and p["email"] == "joe@joes.com"
+    assert p["website"] == "https://joes.example"
     assert p["category"] == "café" and p["instagram"] == "joes"
     assert osm._to_prospect({"type": "node", "id": 8, "tags": {}}, "Australia") is None
 
@@ -320,3 +334,63 @@ def test_verify_email_syntax_and_disposable():
     assert not ok and reason == "bad_syntax"
     ok, reason = enrich.verify_email("a@mailinator.com", cfg)
     assert not ok and reason == "disposable"
+
+
+# ------------------------------------------------------------- website audit
+def test_site_audit_extracts_contacts_and_scores_weak_page():
+    html = """
+    <html><head><title>Joe's Cafe</title></head>
+    <body>
+      <h1>Joe's Cafe</h1>
+      <a href="mailto:hello@joes.example">Email us</a>
+      <a href="tel:+61 8 1234 5678">Call</a>
+      <p>Call +61 8 1234 5678 for bookings.</p>
+    </body></html>
+    """
+    emails = site_audit.extract_emails(html)
+    phones = site_audit.extract_phones(html)
+    assert site_audit.choose_email(emails, "https://joes.example") == "hello@joes.example"
+    assert site_audit.choose_phone(phones).startswith("+61")
+
+    summary = site_audit.PageSummary(
+        url="https://joes.example", final_url="https://joes.example",
+        status_code=200, elapsed_seconds=0.2, html=html, title="Joe's Cafe",
+        h1_count=1, emails=emails, phones=phones,
+    )
+    score, issues = site_audit.score_weakness(summary, [])
+    assert score >= 25
+    assert "no_mobile_viewport" in issues
+    assert "missing_meta_description" in issues
+
+
+def test_site_audit_filters_technical_emails_and_scores_builder_domains():
+    html = """
+    hello@realbusiness.com
+    605a7baede844d278b89dc95ae0a9123@sentry-next.wixpress.com
+    abuse@company.site
+    """
+    assert site_audit.extract_emails(html) == {"hello@realbusiness.com"}
+    summary = site_audit.PageSummary(
+        url="https://shop.wixsite.com/home",
+        final_url="https://shop.wixsite.com/home",
+        status_code=200,
+        html="<html><head><meta name='viewport' content='width=device-width'></head><body><h1>Hi</h1></body></html>",
+        title="Shop",
+        meta_description="A shop",
+        viewport="width=device-width",
+        h1_count=1,
+        stylesheet_count=1,
+    )
+    score, issues = site_audit.score_weakness(summary, [])
+    assert score >= 30
+    assert "free_builder_subdomain" in issues
+
+
+def test_visible_text_strips_script_numbers_before_phone_extraction():
+    html = """
+    <script>var noise = '+0490-0491';</script>
+    <p>Call 0435 353 838</p>
+    """
+    phones = site_audit.extract_phones(site_audit._visible_text(html))
+    assert "0435 353 838" in phones
+    assert "+0490-0491" not in phones

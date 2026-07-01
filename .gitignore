@@ -11,6 +11,8 @@ venv/
 # Local drafts written in review mode (contain prospect data; keep out of git)
 outbox/*.eml
 outbox/review_queue.csv
+outbox/review_queue_legacy_*.csv
+outbox/contact_list.csv
 outbox/*.md
 outbox/*.json
 

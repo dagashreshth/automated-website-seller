@@ -1,9 +1,10 @@
 # Automated Website Seller
 
-Finds local businesses that **don't have a website**, auto-builds each one a
-**personalized sample site**, and prepares (or sends) a **cold-outreach email**
-with a link to that sample and a **30-minute-call** call-to-action — running
-itself every morning on **GitHub Actions' free tier**.
+Finds local businesses that already have an **official but weak website**,
+extracts the public email/phone from that site, auto-builds a **personalized
+sample replacement site**, and prepares (or sends) a **cold-outreach email**
+with a flat **$150** offer — running itself every morning on **GitHub Actions'
+free tier**.
 
 Built to run at **~$0** using OpenStreetMap, GitHub Pages, and GitHub Actions.
 The only stage that may cost money is *sending* email (and even that has a free
@@ -16,10 +17,10 @@ tier) — by design you can run everything else for free and send by hand.
 ```
   ┌──────────────┐   ┌───────────┐   ┌──────────────┐   ┌───────────────┐   ┌──────────┐
   │  Find leads  │ → │  Verify   │ → │ Build sample │ → │ Write outreach│ → │ Send or  │
-  │ OSM/Apollo/  │   │  email    │   │   website    │   │    email      │   │  draft   │
-  │   manual CSV │   │ (gate)    │   │ (GitHub Pages)│  │ (+ Cal.com CTA)│  │          │
+  │ OSM/Apollo/  │   │ site +    │   │   website    │   │    email      │   │  draft   │
+  │   manual CSV │   │ email     │   │ (GitHub Pages)│  │ ($150 CTA)    │   │ + phone  │
   └──────────────┘   └───────────┘   └──────────────┘   └───────────────┘   └──────────┘
-        dedup + suppression + country filter applied throughout; state committed back to the repo
+        website weakness + official site email + dedup + suppression + country filter applied throughout
 ```
 
 Each generated site lands at `previews/<slug>/index.html` and is served at
@@ -29,11 +30,10 @@ Each generated site lands at `previews/<slug>/index.html` and is served at
 
 ## ⚠️ Read this first — the honest limits
 
-1. **No website usually means no email, either.** A café with no site often has
-   only a phone or an Instagram. The free OSM path can only *auto-email* the
-   minority that publish an email; the rest are logged for manual phone
-   follow-up. **Your real volume comes from the B2B (Apollo) and manual-CSV
-   paths**, where verified emails exist.
+1. **The old "no website" model bounced too much.** The default path now starts
+   from businesses that publish an official website, crawls that site for a
+   public email/phone, and only drafts outreach when the site itself exposes the
+   address.
 2. **Deliverability is a hard gate, not a nicety.** Per AWS SES's own docs, a
    sender goes "under review" above a **5%** bounce rate and is paused above
    **10%**. That's why every address is verified before sending and the per-run
@@ -56,7 +56,6 @@ Each generated site lands at `previews/<slug>/index.html` and is served at
 | Sample-site hosting | **GitHub Pages** (many sites, one repo) | **Free** |
 | Orchestration / cron | **GitHub Actions** (2,000 min/mo private) | **Free** |
 | State (dedup/suppression) | **CSV committed to the repo** | **Free** |
-| Call booking | **Cal.com** public booking API/link | **Free** |
 | **Email sending** | **Brevo SMTP free tier (300/day)**, or SES (~$0.10/1k) | **Free → cheap** |
 
 The **minimum unavoidable cost is $0** if you send manually from the drafts.
@@ -72,7 +71,7 @@ volume; a dedicated sending domain (recommended, ~$10/yr) improves inbox rates.
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# 2. configure — edit config.yaml (areas, brand, booking_url, postal_address)
+# 2. configure — edit config.yaml (areas, brand, price, website-audit threshold)
 #    copy .env.example -> .env if you have any API keys (all optional)
 cp .env.example .env
 
@@ -82,11 +81,13 @@ python run.py --dry-run
 # 4. look at the output
 open previews/index.html        # gallery of generated sample sites
 open outbox/                    # ready-to-send .eml drafts (open in Mail to send)
-cat  outbox/review_queue.csv    # who/what/where, as a spreadsheet
+cat  outbox/review_queue.csv    # who/what/where + site score
+cat  outbox/contact_list.csv    # end-of-day email/phone/site list
 ```
 
 Useful flags: `--source osm|apollo|manual|all`, `--limit N`,
-`--unsubscribe email@x.com` (adds to the suppression list).
+`--max-audit N`, `--areas-per-run N`, `--unsubscribe email@x.com`
+(adds to the suppression list).
 
 Run the test suite (no network, ~0.1s):
 
@@ -157,8 +158,9 @@ The scheduled run always runs the **tests** as a health check, even in review mo
 
 > **➡️ Full step-by-step setup is in [GO_LIVE.md](GO_LIVE.md)** — a 9-step,
 > copy-pasteable guide that takes you from review mode to live auto-send using
-> only free tools (Cal.com Free + Brevo Free), with the exact DNS records, the
-> Gmail/Yahoo 2024+ rules, a 3-week warm-up ramp, and a one-switch rollback.
+> free/near-free tools (Brevo Free + your sending domain), with the exact DNS
+> records, the Gmail/Yahoo 2024+ rules, a 3-week warm-up ramp, and a one-switch
+> rollback.
 
 You said you'll handle paid sending manually — so the default is **review mode**
 (drafts you send yourself). To automate it cheaply:
@@ -210,7 +212,9 @@ Service breach — this tool uses OSM/official APIs instead and you should too.
 
 - **OpenStreetMap** (`config.yaml → osm`): set `areas` (free-text place names)
   and `categories` (`amenity=cafe`, `shop=hairdresser`, …). Pulls businesses
-  with **no `website` tag that DO publish an email** (so they're contactable).
+  with an official `website`/`contact:website` tag, then the audit stage fetches
+  that site, extracts the public email/phone, and skips websites that already
+  look good enough.
   **Daily rotation** is automatic: with `rotate: true` and `areas_per_run: N`,
   each run scans a fresh slice of the `areas` list and cycles through all of
   them over successive days — no rescanning, no manual rotation. Queries retry
@@ -229,10 +233,18 @@ Service breach — this tool uses OSM/official APIs instead and you should too.
 All behaviour is in **`config.yaml`** (safe to edit, no secrets). Secrets go in
 **`.env`** locally or **GitHub Secrets** in the cloud. Key knobs:
 
-- `brand.*` — your name, from-email, **postal_address** (legally required),
-  **booking_url** (Cal.com), **previews_base_url** (your Pages URL).
+- `brand.*` — your name, from-email, flat **price**, unsubscribe inbox,
+  **previews_base_url** (your Pages URL).
 - `targeting.allowed_countries`, `targeting.max_outreach_per_run` (start low).
-- `osm.areas`, `osm.categories`, `osm.rotate`, `osm.areas_per_run`.
+- `targeting.require_existing_website`, `targeting.require_website_listed_email`,
+  `targeting.min_website_weakness_score` — the new quality gate.
+- `targeting.max_audit_attempts` — hard cap on network-heavy website checks per
+  run.
+- `website_audit.connect_timeout_seconds`, `website_audit.timeout_seconds`,
+  `website_audit.contact_pages` — how much of each official site to inspect for
+  contact details and weakness signals.
+- `osm.areas`, `osm.categories`, `osm.rotate`, `osm.areas_per_run`,
+  `osm.overpass_timeout_seconds`.
 - `verification.use_hunter`, `verification.require_mx`.
 - `sending.mode` (`review`/`auto`), `sending.delay_seconds`.
 
@@ -240,27 +252,25 @@ All behaviour is in **`config.yaml`** (safe to edit, no secrets). Secrets go in
 
 A **personalized, category-themed one-page site** (a café looks warm, a law firm
 sharp), filled with their **real** scraped data — name, opening hours, cuisine,
-address, phone, Instagram/Facebook — with a "make it yours → book a call" ribbon.
+address, phone, Instagram/Facebook — plus researched copy when available.
 All inline CSS, no external assets, fully responsive, served free on GitHub Pages.
-The **outreach email** picks one of several cohesive copy variants (chosen by a
-hash of the address, so wording varies naturally across recipients) and always
-carries the booking CTA, a real postal address, and a working unsubscribe.
+The **outreach email** uses one consistent personal note and carries the sample
+link, the flat $150 offer, and a working unsubscribe.
 
 ---
 
 ## Why these choices (from the research)
 
-- Google Maps is **no longer free** for the no-website signal: the old $200
-  credit was replaced March 2025 by small per-SKU caps, and the website field
-  forces the **$20/1k Enterprise SKU**. OSM's `[!"website"]` filter is free.
+- Google Maps is **no longer free** at useful volume: the old $200 credit was
+  replaced March 2025 by small per-SKU caps, and the website field forces the
+  **$20/1k Enterprise SKU**. OSM website tags are free, then this repo audits
+  the official site directly.
   ([Google](https://developers.google.com/maps/billing-and-pricing/march-2025),
   [OSM](https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL))
 - **GitHub Actions**: 2,000 free private-repo minutes/mo, hard $0 cap with no
   card on file, Libsodium-encrypted secrets — but cron is **delayed/dropped at
   the top of the hour**, so we schedule off-peak.
   ([GitHub](https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions))
-- **Cal.com** has a free public booking endpoint; Calendly gates booking
-  webhooks behind a paid plan. ([Cal.com](https://cal.com/docs/api-reference/v2/introduction))
 - **Hunter.io** is one API for both finding and verifying email.
   ([Hunter](https://hunter.io/api-documentation))
 

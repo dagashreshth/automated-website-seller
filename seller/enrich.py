@@ -20,6 +20,8 @@ import re
 
 import requests
 
+from .site_audit import audit_website
+
 try:
     import dns.resolver  # type: ignore
     _HAVE_DNS = True
@@ -120,3 +122,8 @@ def discover_email(prospect: dict, cfg: dict) -> dict:
     except (requests.RequestException, ValueError) as exc:
         print(f"  [enrich] hunter find failed for {domain}: {exc}")
     return prospect
+
+
+def audit_existing_website(prospect: dict, cfg: dict) -> dict:
+    """Fetch the prospect's official website and prefer contacts listed there."""
+    return audit_website(prospect, cfg)

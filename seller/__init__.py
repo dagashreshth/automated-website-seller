@@ -1,6 +1,6 @@
 """Automated Website Seller — a free, GitHub-Actions-friendly pipeline that
-finds businesses without a website, builds them a personalized sample site,
-and prepares (or sends) a cold-outreach email with a booking call-to-action.
+finds businesses with weak existing websites, builds personalized sample
+replacements, and prepares (or sends) a flat-fee outreach email.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

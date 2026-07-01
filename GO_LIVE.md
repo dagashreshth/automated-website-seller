@@ -1,9 +1,8 @@
 # GO_LIVE.md — From "Review Mode" to "Live Auto-Send"
 
-This is your one-time setup checklist. The system already exists and works in **review mode** (it writes drafts but never sends). This guide covers **only the parts you must do yourself**: getting a booking link, setting up a sending domain, plugging in free email credentials, meeting the Gmail/Yahoo rules, and warming up safely before you flip the switch to `auto`.
+This is your one-time setup checklist. The system already exists and works in **review mode** (it writes drafts but never sends). This guide covers **only the parts you must do yourself**: confirming the campaign settings, setting up a sending domain, plugging in free email credentials, meeting the Gmail/Yahoo rules, and warming up safely before you flip the switch to `auto`.
 
 Everything here uses **free or near-free** tools:
-- **Cal.com Free** — $0 forever, public 30-min booking link.
 - **Brevo Free** — $0, **300 emails/day**, real SMTP relay.
 - A **domain** you already own (the only real cost, ~$10–15/yr if you don't have one).
 
@@ -13,30 +12,34 @@ Work top to bottom. Each step has a checklist. Don't flip `SEND_MODE=auto` until
 
 ---
 
-## Step 1 — Get your free Cal.com booking link
+## Step 1 — Confirm the campaign settings
 
-This becomes the call-to-action button in every email ("Book a 30-min call").
+The current campaign does not use a calendar booking link. The email points to
+the generated sample site and quotes one flat price.
 
-1. Go to **https://cal.com** and sign up (free "Individuals" plan — $0 forever, public booking page included).
-2. Pick a username. This becomes your handle: `cal.com/<YOUR_HANDLE>`.
-3. New accounts come with a default **"30 Min Meeting"** event whose slug is `30min`. Your link is:
-   ```
-   https://cal.com/<YOUR_HANDLE>/30min
-   ```
-   (If you'd rather build your own: **Event Types → + New**, set **Duration = 30 minutes**, set the **slug** to `30min`, save.)
-4. Open the link in a private browser window to confirm it loads and shows open times.
-5. Paste it into `config.yaml`:
+1. Open `config.yaml`.
+2. Confirm the sender identity and flat price:
    ```yaml
    brand:
-     booking_url: "https://cal.com/<YOUR_HANDLE>/30min"
+     name: "Shiftora"
+     founder: "Shreshth"
+     from_email: "info@shiftora.ai"
+     reply_to: "info@shiftora.ai"
+     price: "$150"
+   ```
+3. Confirm the website-quality gate:
+   ```yaml
+   targeting:
+     require_existing_website: true
+     require_website_listed_email: true
+     require_weak_website: true
+     min_website_weakness_score: 25
    ```
 
 **Checklist**
-- [ ] Cal.com account created (Free plan)
-- [ ] 30-min event exists and the public link loads in a private window
-- [ ] `brand.booking_url` in `config.yaml` updated with the real link
-
-> Note: the Free plan keeps "Cal.com" branding on the page and is limited to 1 user. That's fine for outreach.
+- [ ] Flat price is `$150`
+- [ ] From/reply-to inboxes are correct
+- [ ] Website gate requires an existing weak website and a website-listed email
 
 ---
 
@@ -177,24 +180,28 @@ These let the automated run authenticate to Brevo **without putting secrets in t
 
 ---
 
-## Step 7 — Fill your postal address & keep volume low (config.yaml)
+## Step 7 — Keep volume low and the website gate strict (config.yaml)
 
-Two edits in `config.yaml`:
+Two settings matter before auto-send:
 
-1. **Postal address (legally required).** CAN-SPAM (US), the Spam Act (AU), CASL (CA) and others **mandate a real physical postal address** in every marketing email. Put a real one (a registered business address or a mailbox you control):
-   ```yaml
-   brand:
-     postal_address: "<YOUR REAL POSTAL ADDRESS, e.g. 12 Main St, Byron Bay NSW 2481, Australia>"
-   ```
-2. **Keep outreach volume low.** Start small and let reputation build (Step 8). The system caps sends per run here:
+1. **Keep outreach volume low.** Start small and let reputation build (Step 8). The system caps sends per run here:
    ```yaml
    targeting:
      max_outreach_per_run: 15   # keep this low during warm-up
    ```
+2. **Keep the website gate strict.** The defaults skip businesses unless their
+   official site exposes the email address and scores weak enough to justify the
+   pitch:
+   ```yaml
+   targeting:
+     require_website_listed_email: true
+     min_website_weakness_score: 25
+   ```
 
 **Checklist**
-- [ ] `brand.postal_address` is a **real** address (not the placeholder text)
 - [ ] `targeting.max_outreach_per_run` is **low** (≈ 15 or less during warm-up)
+- [ ] `targeting.require_website_listed_email` remains `true`
+- [ ] `targeting.min_website_weakness_score` is not lowered until you have reviewed draft quality
 
 ---
 
@@ -232,17 +239,16 @@ If spam rate trends toward 0.10%+, or bounces exceed ~2–3%, **stop, lower volu
 
 ## Step 9 — Final pre-flight checklist + how to roll back
 
-Run **one last test in review mode**: trigger a run and read the generated drafts. Confirm the booking link, From name, unsubscribe line, and postal address all look right in an actual draft.
+Run **one last test in review mode**: trigger a run and read the generated drafts. Confirm the sample link, flat $150 price, From name, unsubscribe line, and phone/contact CSV all look right.
 
 **Pre-flight — every box must be checked before you flip to `auto`:**
-- [ ] **Booking link** works (`brand.booking_url`) — opened it live
 - [ ] **Brevo domain authenticated** — green checks on DKIM (and DMARC published)
 - [ ] **DMARC** record live at `_dmarc.<SUBDOMAIN>` (`p=none` minimum)
 - [ ] **All 7 GitHub Secrets** present with exact names; `SMTP_PASSWORD` is the SMTP **key**
 - [ ] **`FROM_EMAIL`** is on the authenticated subdomain
-- [ ] **`postal_address`** is real (not placeholder)
 - [ ] **`max_outreach_per_run`** set to Week-1 level (10–20)
-- [ ] A **review-mode draft** looks correct: booking CTA, unsubscribe link, postal address present
+- [ ] A **review-mode draft** looks correct: sample link, `$150`, unsubscribe link
+- [ ] `outbox/contact_list.csv` contains email, phone, website, and site-score fields
 - [ ] **Google Postmaster Tools** set up to monitor spam rate
 
 **Flip the switch:** change the GitHub secret **`SEND_MODE`** from `review` to `auto`. The next scheduled run will send for real.
@@ -265,5 +271,4 @@ SEND_MODE = review   →   SEND_MODE = auto
 - Gmail/Yahoo bulk-sender rules (SPF+DKIM+DMARC, one-click unsubscribe, spam rate): https://support.google.com/a/answer/81126
 - Google sender FAQ (spam rate, RFC 8058, 48-hr unsubscribe): https://support.google.com/a/answer/14229414
 - Yahoo sender best practices: https://senders.yahooinc.com/best-practices/
-- Cal.com pricing (Free plan): https://cal.com/pricing
 - Warm-up & subdomain isolation guidance: https://www.topo.io/blog/safe-sending-limits-cold-email · https://www.mailgun.com/blog/deliverability/domain-warmup-reputation-stretch-before-you-send/

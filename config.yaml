@@ -10,11 +10,11 @@ brand:
   founder: "Shreshth"
   founder_location: "Dubai"
   # Flat price quoted in the outreach email. Edit freely.
-  price: "$299"
+  price: "$150"
   from_email: "info@shiftora.ai"
   reply_to: "info@shiftora.ai"
-  # Your free Cal.com 30-min booking link — becomes the email call-to-action.
-  # See GO_LIVE.md step 1 to create one.
+  # Legacy/unused by the current outreach template. Kept so older configs do
+  # not break, but the email now uses the sample link + flat price as the CTA.
   booking_url: "https://cal.com/your-handle/30min"
   # Where prospects' preview sites are served from (your GitHub Pages base URL).
   previews_base_url: "https://dagashreshth.github.io/automated-website-seller"
@@ -40,9 +40,28 @@ targeting:
   # Hard safety cap on emails actually sent per run (deliverability + cost).
   # Start LOW and ramp slowly — see GO_LIVE.md warm-up schedule.
   max_outreach_per_run: 15
+  # Website audits are network-heavy. Stop after this many candidates even if
+  # the send cap has not been reached yet; the next run will continue rotation.
+  max_audit_attempts: 120
+  # New model: only contact businesses that already have an official website,
+  # where that website itself publishes the email address we will use.
+  require_existing_website: true
+  require_website_listed_email: true
+  # Higher score = weaker website. A site must score at least this badly before
+  # we pitch a replacement sample, so good/modern websites are skipped.
+  require_weak_website: true
+  min_website_weakness_score: 25
 
 # ----------------------------------------------------------------------------
-# SOURCE 1: OpenStreetMap (FREE, no API key) — local businesses w/o a website
+# WEBSITE AUDIT — contact extraction + "is this site weak enough to pitch?"
+# ----------------------------------------------------------------------------
+website_audit:
+  connect_timeout_seconds: 5
+  timeout_seconds: 8
+  contact_pages: 2
+
+# ----------------------------------------------------------------------------
+# SOURCE 1: OpenStreetMap (FREE, no API key) — local businesses WITH websites
 # ----------------------------------------------------------------------------
 osm:
   enabled: true
@@ -53,6 +72,7 @@ osm:
   # Overpass queries fast and the prospects genuinely small/local.
   rotate: true
   areas_per_run: 4
+  overpass_timeout_seconds: 45
   areas:
     # --- Australia (priority market, most defensible legally) ---
     - "Fremantle, Western Australia, Australia"
@@ -89,8 +109,11 @@ osm:
     # - "Visby, Gotland, Sweden"
     # - "Ålesund, Norway"
     # - "Roskilde, Denmark"
-  # OSM category selectors (key=value). Business types pulled that have NO
-  # website tag AND publish an email. Add/remove freely.
+  # Pull businesses that publish an official website tag. The website-audit
+  # stage then extracts email/phone from that site and skips good sites.
+  require_website: true
+  require_email: false
+  # OSM category selectors (key=value). Add/remove freely.
   categories:
     - "amenity=cafe"
     - "amenity=restaurant"
@@ -119,8 +142,8 @@ osm:
     - "shop=estate_agent"
     - "leisure=fitness_centre"
     - "craft=*"
-  # Max usable prospects to keep per area per run.
-  max_per_area: 80
+  # Max usable prospects to keep per area per run before website auditing.
+  max_per_area: 25
 
 # ----------------------------------------------------------------------------
 # SOURCE 2: Apollo (optional) — B2B service businesses with real emails

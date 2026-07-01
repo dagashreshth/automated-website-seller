@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{ brand.name }} — Sample Websites for Local Businesses</title>
-<meta name="description" content="Free sample websites {{ brand.name }} has designed for local businesses — see one built for your business.">
+<title>{{ brand.name }} — Sample Website Rebuilds for Local Businesses</title>
+<meta name="description" content="Free sample website rebuilds {{ brand.name }} has designed for local businesses — see one built for your business.">
 <style>
   :root{--ink:#1d2433;--muted:#5b6577;--line:#e8eaf0;--soft:#f6f7fb;--accent:#4f7cff;--accent-d:#3a5fd8}
   *{box-sizing:border-box}
@@ -42,12 +42,12 @@
 <div class="hero">
   <div class="wrap">
     <p class="eyebrow">{{ brand.name }} · Web design for local business</p>
-    <h1>We build local businesses a website they'll actually love.</h1>
-    <p>Every site below is a free sample we designed for a real business that didn't have one yet. Yours could be next.</p>
+    <h1>We rebuild local websites so they feel worth visiting.</h1>
+    <p>Every site below is a free sample rebuild for a real business whose current website could be stronger.</p>
     <div class="stats">
       <div class="stat"><b>{{ count }}</b><span>Sample sites built</span></div>
       <div class="stat"><b>{{ categories }}</b><span>Business types</span></div>
-      <div class="stat"><b>30 min</b><span>To make one yours</span></div>
+      <div class="stat"><b>{{ brand.price or "$150" }}</b><span>Flat fee</span></div>
     </div>
   </div>
 </div>
