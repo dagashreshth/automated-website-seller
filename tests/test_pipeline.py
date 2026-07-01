@@ -226,6 +226,14 @@ def test_render_email_substitutes_and_excludes_booking_link():
     assert "info@shiftora.ai" in text and "Unsubscribe" in html
 
 
+def test_render_email_possessive_for_names_ending_in_s():
+    p = dict(SAMPLE)
+    p["name"] = "Adore Charter Services"
+    _, _, text = website.render_email(p, CFG, "https://prev/url/")
+    assert "Adore Charter Services' current website" in text
+    assert "Services's" not in text
+
+
 # ------------------------------------------------------------- state / privacy
 def test_hash_is_stable_and_pii_free():
     h = _hash("Hello@Example.com")

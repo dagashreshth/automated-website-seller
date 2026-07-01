@@ -35,6 +35,11 @@ def _site_note(prospect: dict) -> str:
     return "I thought the current site could make a stronger first impression with a cleaner, more modern version."
 
 
+def _possessive(name: str) -> str:
+    name = name or "your business"
+    return f"{name}'" if name.endswith("s") else f"{name}'s"
+
+
 def render(prospect: dict, cfg: dict, preview_url: str, env) -> tuple[str, str, str]:
     """Return (subject, html_body, text_body)."""
     brand = cfg.get("brand", {})
@@ -49,7 +54,7 @@ def render(prospect: dict, cfg: dict, preview_url: str, env) -> tuple[str, str, 
     greeting = f"Hi {name} team,"
     intro = (
         f"I'm {founder}, a {location}-based founder. The {brand_name} team makes "
-        f"websites for local businesses. I was looking at {name}'s current website. "
+        f"websites for local businesses. I was looking at {_possessive(name)} current website. "
         f"{_site_note(prospect)} So I put together a very rough sample in the "
         f"direction I think would work better."
     )
