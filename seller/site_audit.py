@@ -22,6 +22,7 @@ BAD_EMAIL_DOMAINS = {
     "yourdomain.com", "shiftora.ai", "company.site",
     "sentry.wixpress.com", "sentry-next.wixpress.com",
 }
+BAD_EMAILS = {"filler@godaddy.com"}
 BAD_EMAIL_PREFIXES = ("abuse@", "postmaster@", "noreply@", "no-reply@", "donotreply@")
 FREE_BUILDER_DOMAINS = (
     "wixsite.com", "weebly.com", "godaddysites.com", "business.site",
@@ -142,6 +143,8 @@ def extract_emails(text: str) -> set[str]:
     out = set()
     for match in EMAIL_RE.findall(text):
         email = match.strip(" .,:;<>[](){}'\"").lower()
+        if email in BAD_EMAILS:
+            continue
         domain = email.split("@")[-1]
         if domain in BAD_EMAIL_DOMAINS:
             continue
@@ -375,7 +378,8 @@ def audit_website(prospect: dict, cfg: dict) -> dict:
         emails.update(page.emails)
         phones.update(page.phones)
 
-    site_email = choose_email(emails, home.final_url or url)
+    known_email = (p.get("email") or "").strip().lower()
+    site_email = known_email if known_email in emails else choose_email(emails, home.final_url or url)
     site_phone = choose_phone(phones)
     if site_email:
         p["email"] = site_email

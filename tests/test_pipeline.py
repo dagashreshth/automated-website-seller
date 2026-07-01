@@ -394,3 +394,26 @@ def test_visible_text_strips_script_numbers_before_phone_extraction():
     phones = site_audit.extract_phones(site_audit._visible_text(html))
     assert "0435 353 838" in phones
     assert "+0490-0491" not in phones
+
+
+def test_site_audit_prefers_known_business_email(monkeypatch):
+    html = """
+    <html><head><meta name="viewport" content="width=device-width"></head>
+    <body>info@latinotype.com saltybasketco@gmail.com</body></html>
+    """
+
+    class Resp:
+        status_code = 200
+        url = "https://saltybasketco.godaddysites.com/contact-us"
+        headers = {"content-type": "text/html"}
+        text = html
+        def raise_for_status(self):
+            return None
+
+    monkeypatch.setattr(site_audit.requests, "get", lambda *a, **k: Resp())
+    p = site_audit.audit_website({
+        "name": "Salty Basket Co.",
+        "website": "https://saltybasketco.godaddysites.com/contact-us",
+        "email": "saltybasketco@gmail.com",
+    }, {"brand": {"from_email": "info@shiftora.ai"}, "website_audit": {"contact_pages": 0}})
+    assert p["email"] == "saltybasketco@gmail.com"
