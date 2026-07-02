@@ -111,6 +111,15 @@ def test_brand_colors_drive_a_legible_derived_palette():
     assert sum(website._hex_to_rgb(theme["hero_from"])) / 3 < 0.4
 
 
+def test_grayscale_brand_colors_stay_neutral():
+    p = dict(SAMPLE)
+    p["brand_colors"] = {"primary": "#696969", "secondary": "#111111"}
+    theme = website.build_context(p, CFG)["theme"]
+    assert theme["accent"] == "#4a4a4a"
+    assert theme["hero_from"] == "#101010"
+    assert theme["vibe"] == "neutral"
+
+
 def test_palette_name_override_is_respected():
     p = dict(SAMPLE); p["palette_name"] = "vino"
     assert website.build_context(p, CFG)["theme"]["accent"] == website.PALETTES["vino"]["accent"]
@@ -376,6 +385,8 @@ def test_site_audit_filters_technical_emails_and_scores_builder_domains():
     hello@realbusiness.com
     605a7baede844d278b89dc95ae0a9123@sentry-next.wixpress.com
     abuse@company.site
+    impallari@gmail.com
+    hello@rfuenzalida.com
     """
     assert site_audit.extract_emails(html) == {"hello@realbusiness.com"}
     summary = site_audit.PageSummary(

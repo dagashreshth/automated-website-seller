@@ -121,6 +121,10 @@ def _palette_from_brand(primary: str, secondary: str | None = None) -> dict:
     are hue-tinted near-black / near-white so the whole page feels of-a-piece.
     """
     hue, light, sat = _hls(primary)
+    if sat < 0.08:
+        return {"accent": "#4a4a4a", "accent_dark": "#242424", "ink": "#202020",
+                "soft": "#f5f5f5", "hero_from": "#101010", "hero_to": "#2b2b2b",
+                "vibe": "neutral", "secondary": secondary or "#707070"}
     # Accent: keep brand hue/saturation, clamp lightness into a usable band so
     # buttons on white and white text on buttons both have contrast.
     acc_l = min(0.56, max(0.40, light))

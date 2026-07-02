@@ -22,7 +22,15 @@ BAD_EMAIL_DOMAINS = {
     "yourdomain.com", "shiftora.ai", "company.site",
     "sentry.wixpress.com", "sentry-next.wixpress.com",
 }
-BAD_EMAILS = {"filler@godaddy.com"}
+BAD_EMAILS = {
+    "filler@godaddy.com",
+    # Common designer/font credits embedded in GoDaddy/Wix template assets.
+    # These are not business contact addresses even when they appear in HTML.
+    "hello@rfuenzalida.com",
+    "impallari@gmail.com",
+    "matt@pixelspread.com",
+    "team@latofonts.com",
+}
 BAD_EMAIL_PREFIXES = ("abuse@", "postmaster@", "noreply@", "no-reply@", "donotreply@")
 FREE_BUILDER_DOMAINS = (
     "wixsite.com", "weebly.com", "godaddysites.com", "business.site",
