@@ -222,6 +222,8 @@ def test_render_email_substitutes_and_excludes_booking_link():
     assert "$150" in text
     assert "current website" in text
     assert "doesn't have one yet" not in text
+    assert "Open the sample website" in html
+    assert "Open the sample website →" not in html
     # no calendar/booking link anywhere in the email
     assert CFG["brand"]["booking_url"] not in text
     assert "cal.com" not in text and "cal.com" not in html
