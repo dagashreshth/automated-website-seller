@@ -1,12 +1,12 @@
-name: Daily outreach
+name: Nightly outreach
 
-# Runs every morning. Note: GitHub cron is in UTC and (per GitHub's own docs)
-# can be delayed/dropped at the top of the hour under load, so we use an
-# off-peak minute (:27). Adjust the hour to hit your local ~5am.
-#   05:27 UTC. e.g. AEST = UTC+10 -> 15:27 local; EU CET = UTC+1 -> 06:27 local.
+# Runs in GitHub Actions, so it continues even when your laptop is shut.
+# GitHub cron is UTC and can be delayed/dropped at the top of the hour under
+# load, so we use an off-peak minute. The current schedule is 02:37 Dubai time
+# (Asia/Dubai = UTC+04:00) every night.
 on:
   schedule:
-    - cron: "27 5 * * *"
+    - cron: "37 22 * * *"
   workflow_dispatch:        # lets you trigger a run manually from the Actions tab
 
 # Only one run at a time; never cancel a run mid-send.
@@ -20,7 +20,9 @@ permissions:
 jobs:
   outreach:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # OSM + website audits are network-bound. Keep enough headroom for the
+    # nightly cloud run without relying on a local machine staying awake.
+    timeout-minutes: 55
     env:
       # "auto" only when you've set the SEND_MODE secret to auto. Otherwise review.
       SEND_MODE: ${{ secrets.SEND_MODE }}

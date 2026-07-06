@@ -102,7 +102,7 @@ pytest -q          # 19 unit tests: dedup, suppression, country gate, rotation, 
 
 ---
 
-## Going live on GitHub Actions (free 5am cron)
+## Going live on GitHub Actions (runs while your laptop is shut)
 
 ```bash
 # from this folder, with the GitHub CLI already logged in:
@@ -127,8 +127,10 @@ Then, in the new repo:
 2. **Add secrets** (Settings → Secrets and variables → Actions) for any of:
    `HUNTER_API_KEY`, `APOLLO_API_KEY`, `SMTP_HOST/PORT/USER/PASSWORD`,
    `FROM_EMAIL`, `FROM_NAME`, `SEND_MODE`.
-3. **Schedule**: edit the cron in `.github/workflows/daily.yml` (UTC!) to hit
-   your local 5am. Default is `05:27 UTC`.
+3. **Schedule**: the included workflow runs in GitHub Actions, not on your
+   laptop, so it still runs while your Mac is asleep or shut. The default
+   schedule is `22:37 UTC`, which is **02:37 Asia/Dubai**. Edit the cron in
+   `.github/workflows/daily.yml` if you want a different local time.
 4. **Test it**: Actions tab → *Daily outreach* → *Run workflow*.
 5. **Go auto** only when ready: set the `SEND_MODE` secret to `auto` and add
    the `SMTP_*` secrets (see **[GO_LIVE.md](GO_LIVE.md)**).
@@ -150,7 +152,21 @@ Then, in the new repo:
 > test the cloud path — that always runs.) When you flip to `auto`, the daily
 > cron sends for real and commits `state/` + `previews/` back to the repo.
 
-The scheduled run always runs the **tests** as a health check, even in review mode.
+The scheduled run always runs the **tests** as a health check, even in review
+mode.
+
+### Laptop-closed automation
+
+Your laptop cannot run local Python/Codex tasks while it is shut. For overnight
+unattended outreach, use the GitHub Actions workflow:
+
+1. Add the GitHub Secrets from [GO_LIVE.md](GO_LIVE.md), including SMTP
+   credentials and `SEND_MODE`.
+2. Keep `SEND_MODE=review` while testing. Scheduled review-mode cloud runs only
+   run tests, because private `.eml` drafts would be destroyed with the runner.
+3. When domain authentication and warm-up checks are ready, set
+   `SEND_MODE=auto`. From that point, the nightly GitHub Actions run does the
+   full workflow and commits `state/` + `previews/` back to the repo.
 
 ---
 

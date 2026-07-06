@@ -6,6 +6,25 @@ Everything here uses **free or near-free** tools:
 - **Brevo Free** — $0, **300 emails/day**, real SMTP relay.
 - A **domain** you already own (the only real cost, ~$10–15/yr if you don't have one).
 
+## Laptop-closed / overnight operation
+
+If your laptop is shut, local Codex/Desktop tasks and local Python processes do
+not keep running. The unattended overnight path is the GitHub Actions workflow
+in `.github/workflows/daily.yml`.
+
+The workflow is scheduled for **02:37 Asia/Dubai** every night
+(`37 22 * * *` in UTC). It always runs the tests. It only performs real
+outreach when the repository secret `SEND_MODE` is set to `auto`; otherwise a
+scheduled review-mode run intentionally stops after tests so it does not create
+private `.eml` drafts on a throwaway GitHub runner.
+
+So the laptop-closed setup is:
+1. Complete the sending-domain and SMTP steps below.
+2. Add the GitHub Secrets in Step 6.
+3. Keep `SEND_MODE=review` until the pre-flight checklist passes.
+4. Change `SEND_MODE=auto` when you want the nightly cloud run to send and
+   commit generated `state/` + `previews/` changes without your laptop.
+
 Work top to bottom. Each step has a checklist. Don't flip `SEND_MODE=auto` until the **pre-flight checklist in Step 9** is all green.
 
 > Throughout this guide, anything in `<ANGLE_BRACKETS>` is a **placeholder** — replace it with your own value. Don't paste it literally.
