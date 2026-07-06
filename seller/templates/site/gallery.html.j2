@@ -54,9 +54,9 @@
 <main class="wrap">
   <h2>Recent sample sites</h2>
   <p class="sub">Click any one to see a full, personalized website — built automatically, free to look at.</p>
-  {% if items %}
+  {%- if items %}
   <div class="grid">
-    {% for it in items %}
+    {%- for it in items %}
     <a class="card" href="./{{ it.slug }}/">
       <div class="thumb"><span>{{ it.name[:2]|upper }}</span></div>
       <div class="body">
@@ -64,11 +64,11 @@
         <span class="chip">{{ it.category }}{% if it.city %} · {{ it.city }}{% endif %}</span>
       </div>
     </a>
-    {% endfor %}
+    {%- endfor %}
   </div>
-  {% else %}
+  {%- else %}
   <p class="empty">No sample sites generated yet — run the pipeline to populate this gallery.</p>
-  {% endif %}
+  {%- endif %}
 </main>
 <footer>
   <div class="wrap">© {{ items|length }} sample sites · designed by {{ brand.name }}</div>

@@ -18,7 +18,7 @@ unattended cron still produces a beautiful page with none of them):
     prospect["palette_name"]  -> name of a built-in palette to use instead
     prospect["copy"] = {
         "hero_headline", "hero_kicker", "hero_sub",
-        "story_heading", "about": [..paras..],
+        "service_heading", "service_lead", "story_heading", "about": [..paras..],
         "services": [{"title","blurb"}, ..],
         "highlights": [..short honest chips..],
     }
@@ -567,6 +567,8 @@ def build_context(prospect: dict, cfg: dict) -> dict:
         "headline": copy.get("hero_headline") or prospect.get("name", ""),
         "hero_kicker": copy.get("hero_kicker", ""),
         "hero_sub": _hero_sub(prospect),
+        "service_heading": copy.get("service_heading", ""),
+        "service_lead": copy.get("service_lead", ""),
         "story_heading": copy.get("story_heading", ""),
         "about_paras": [p for p in (copy.get("about") or []) if p],
         "highlights": _highlights(prospect, hours),

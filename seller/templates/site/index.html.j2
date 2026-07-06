@@ -452,8 +452,8 @@
   <div class="wrap">
     <div class="sec-head">
       <p class="eyebrow">What we offer</p>
-      <h2>{% if biz.category %}Everything {{ biz.name }} does best{% else %}What brings people in{% endif %}</h2>
-      <p class="lead">A little taste of what brings people back to {{ biz.name }}{% if biz.city %} in {{ biz.city }}{% endif %}.</p>
+      <h2>{{ service_heading if service_heading else (('Everything ' ~ biz.name ~ ' does best') if biz.category else 'What brings people in') }}</h2>
+      <p class="lead">{{ service_lead if service_lead else ('A little taste of what brings people back to ' ~ biz.name ~ ((' in ' ~ biz.city) if biz.city else '') ~ '.') }}</p>
     </div>
     <div class="grid">
       {% for s in service_cards %}
