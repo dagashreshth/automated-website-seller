@@ -17,6 +17,7 @@ from urllib.parse import urljoin, urlparse
 import requests
 
 EMAIL_RE = re.compile(r"(?i)\b[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}\b")
+CFEMAIL_RE = re.compile(r'data-cfemail=["\']([a-f0-9]+)["\']', re.I)
 BAD_EMAIL_DOMAINS = {
     "example.com", "example.org", "example.net", "domain.com",
     "yourdomain.com", "shiftora.ai", "company.site",
@@ -148,8 +149,27 @@ def site_domain(url: str) -> str:
 
 def extract_emails(text: str) -> set[str]:
     text = unescape(text or "").replace("%40", "@").replace("%20", " ")
+    candidates: list[str] = [text]
+    for encoded in CFEMAIL_RE.findall(text):
+        try:
+            key = int(encoded[:2], 16)
+            decoded = "".join(
+                chr(int(encoded[i:i + 2], 16) ^ key)
+                for i in range(2, len(encoded), 2)
+            )
+            candidates.append(decoded)
+        except (ValueError, TypeError):
+            continue
+    # Some site builders render visible emails with markup between the local
+    # part, @, and domain. Fold tags/spaces so `name@</a>example.com` is found.
+    visibleish = re.sub(r"(?is)<(script|style|svg|noscript)\b.*?</\1>", " ", text)
+    visibleish = re.sub(r"(?s)<[^>]+>", " ", visibleish)
+    visibleish = re.sub(r"\s*@\s*", "@", visibleish)
+    visibleish = re.sub(r"(?<=@[a-z0-9-])\s+(?=[a-z0-9-]+\.)", "", visibleish, flags=re.I)
+    visibleish = re.sub(r"(?<=\.)\s+(?=[a-z]{2,}\b)", "", visibleish, flags=re.I)
+    candidates.append(visibleish)
     out = set()
-    for match in EMAIL_RE.findall(text):
+    for match in EMAIL_RE.findall(" ".join(candidates)):
         email = match.strip(" .,:;<>[](){}'\"").lower()
         if email in BAD_EMAILS:
             continue

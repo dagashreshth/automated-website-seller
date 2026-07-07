@@ -207,6 +207,21 @@ def test_menu_steps_gtk_render_only_when_present():
     assert '<section class="gtk">' in full and "Dog-friendly" in full
 
 
+# ------------------------------------------------------------- email scraping
+def test_extract_emails_decodes_cloudflare_cfemail():
+    html = (
+        '<a href="/cdn-cgi/l/email-protection" class="__cf_email__" '
+        'data-cfemail="6e1a1c0f07020b1c1d08011c1d0f020b0001180f1d0d011a070f2e09030f0702400d0103">'
+        "[email&#160;protected]</a>"
+    )
+    assert "trailersforsalenovascotia@gmail.com" in site_audit.extract_emails(html)
+
+
+def test_extract_emails_handles_visible_markup_splits():
+    html = '<font>bamboovillage888@</font><span>gmail.com</span>'
+    assert "bamboovillage888@gmail.com" in site_audit.extract_emails(html)
+
+
 # ----------------------------------------------------------- email/outreach copy
 def test_subject_is_short_nameless_and_clean():
     assert len(outreach.SUBJECT.split()) < 6
