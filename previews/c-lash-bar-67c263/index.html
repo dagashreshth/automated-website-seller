@@ -1,51 +1,19 @@
 <!DOCTYPE html>
-{#
-  Shiftora sample-site template.
-
-  Reads the REAL business data we scraped plus any researched enrichment the
-  renderer injected: brand-derived palette, business-specific copy
-  (headline / hero_sub / about_paras / service_cards / highlights),
-  real reviews, and real photos (logo_url / hero_url). EVERY optional variable
-  is guarded so the page is always complete and beautiful even with none of it.
-
-  Honesty by design: NO fabricated star ratings or "loved by locals" badges —
-  the reviews section only appears when we actually found real reviews. The
-  "free sample built by Shiftora" note lives quietly in the footer, so the page
-  reads as the business's own first.
-
-  Self-contained: one inline <style>, no web fonts, no <link>/@import. The only
-  external src is an optional researched photo (logo/hero). JS is progressive
-  enhancement only.
-#}
-{%- set t = theme if theme else {} -%}
-{%- set accent      = t.accent      if t.accent      else '#c9893f' -%}
-{%- set accent_dark = t.accent_dark if t.accent_dark else '#a96f2c' -%}
-{%- set ink         = t.ink         if t.ink         else '#2a211a' -%}
-{%- set soft        = t.soft        if t.soft        else '#f7f3ee' -%}
-{%- set hero_from   = t.hero_from   if t.hero_from   else '#2a211a' -%}
-{%- set hero_to     = t.hero_to     if t.hero_to     else '#3a2c1f' -%}
-{%- set place = [] -%}
-{%- if biz.city %}{% set _ = place.append(biz.city) %}{% endif -%}
-{%- if biz.country %}{% set _ = place.append(biz.country) %}{% endif -%}
-{%- set locale = place | join(', ') -%}
-{%- set headline = headline if headline else biz.name -%}
-{%- set category = biz.category if biz.category else 'local favourite' -%}
-{%- set headline_is_name = (headline | trim | lower) == (biz.name | trim | lower) -%}
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{ biz.name }}{% if biz.city %} — {{ biz.city }}{% endif %}{% if biz.category %} · {{ biz.category }}{% endif %}</title>
-<meta name="description" content="{% if hero_sub %}{{ hero_sub }}{% elif biz.description %}{{ biz.description }}{% else %}{{ biz.name }} — {{ category }}{% if biz.city %} in {{ biz.city }}{% endif %}.{% endif %}">
-<meta name="theme-color" content="{{ accent }}">
+<title>C LASH BAR — Neutral Bay · beauty salon</title>
+<meta name="description" content="Luxury lash and brow services on the Lower North Shore, with appointments by phone at Shop 5/8 Waters Road.">
+<meta name="theme-color" content="#4a4a4a">
 <style>
   :root{
-    --accent:{{ accent }};
-    --accent-dark:{{ accent_dark }};
-    --ink:{{ ink }};
-    --soft:{{ soft }};
-    --hero-from:{{ hero_from }};
-    --hero-to:{{ hero_to }};
+    --accent:#4a4a4a;
+    --accent-dark:#242424;
+    --ink:#202020;
+    --soft:#f5f5f5;
+    --hero-from:#101010;
+    --hero-to:#2b2b2b;
 
     --paper:#fffdfb;
     --cream:color-mix(in srgb, var(--soft) 78%, #ffffff);
@@ -377,221 +345,152 @@
 </head>
 <body>
 
-{# ---------- NAV ---------- #}
+
 <header>
   <div class="wrap">
     <nav id="nav">
       <div class="brand">
-        <div class="mark" aria-hidden="true">
-          {%- if logo_url %}<img src="{{ logo_url }}" alt="{{ biz.name }} logo">
-          {%- else %}{{ biz.name[0]|upper if biz.name else '•' }}{% endif -%}
-        </div>
+        <div class="mark" aria-hidden="true">C</div>
         <div class="brand-text">
-          <span class="brand-name">{{ biz.name }}</span>
-          {% if biz.category or biz.city %}
-          <span class="brand-sub">{{ biz.category }}{% if biz.category and biz.city %} · {% endif %}{{ biz.city }}</span>
-          {% endif %}
+          <span class="brand-name">C LASH BAR</span>
+          
+          <span class="brand-sub">beauty salon · Neutral Bay</span>
+          
         </div>
       </div>
-      <a class="nav-cta" href="#contact">{% if biz.phone %}Call us{% else %}Contact{% endif %}</a>
+      <a class="nav-cta" href="#contact">Call us</a>
     </nav>
   </div>
 </header>
 
-{# ---------- HERO ---------- #}
+
 <div class="hero">
   <div class="wrap">
     <div class="hero-inner">
       <div class="hero-copy">
-        {% if locale %}
-        <p class="eyebrow">{{ locale }}</p>
-        {% elif biz.category %}
-        <p class="eyebrow">Your local {{ biz.category }}</p>
-        {% endif %}
+        
+        <p class="eyebrow">Neutral Bay, Australia</p>
+        
 
-        <h1>{{ headline }}{% if headline_is_name %}<span class="h1-kicker">{% if hero_kicker %}{{ hero_kicker }}{% elif biz.category %}Your {{ biz.category }}{% if biz.city %} in {{ biz.city }}{% endif %}{% elif biz.city %}A local favourite in {{ biz.city }}{% else %}A local favourite, done right{% endif %}</span>{% endif %}</h1>
+        <h1>Lashes and brows in Neutral Bay</h1>
 
-        <p class="hero-sub">
-          {%- if hero_sub %}{{ hero_sub }}
-          {%- else %}Welcome to {{ biz.name }}{% if biz.category %}, your friendly {{ biz.category }}{% endif %}{% if biz.city %} in the heart of {{ biz.city }}{% endif %}. We'd love to see you soon.{% endif %}
+        <p class="hero-sub">Luxury lash and brow services on the Lower North Shore, with appointments by phone at Shop 5/8 Waters Road.
         </p>
 
         <div class="btns">
-          <a class="btn btn-primary" href="{{ cta.href }}">{{ cta.label }} →</a>
-          {% if 'tel:' in cta.href %}
+          <a class="btn btn-primary" href="tel:02 9953 9850">Book an appointment →</a>
+          
           <a class="btn btn-ghost" href="#contact">See what we offer →</a>
-          {% elif biz.phone %}
-          <a class="btn btn-ghost" href="tel:{{ biz.phone }}">📞 Call us</a>
-          {% endif %}
+          
         </div>
 
-        {% if highlights %}
+        
         <ul class="trust" aria-label="Highlights">
-          {% for h in highlights %}<li><span>{{ h }}</span></li>{% endfor %}
+          <li><span>Shop 5/8 Waters Rd</span></li><li><span>Lashes, brows and microblading</span></li><li><span>Late Thursday appointments</span></li>
         </ul>
-        {% endif %}
+        
       </div>
 
-      {# showcase: real photo if researched, else a varied CSS-only card #}
-      {% if hero_url %}
-      <div class="hero-card hero-photo" style="background-image:url('{{ hero_url }}')" role="img" aria-label="{{ biz.name }}"></div>
-      {% else %}
-      <div class="hero-card v{{ visual_seed }}" aria-hidden="true">
-        {% if visual_seed != 1 %}<div class="awning"></div>{% endif %}
-        <div class="pane">
-          {% if service_cards %}
-            {% for s in service_cards[:3] %}<span class="chip">{{ s.title }}</span>{% endfor %}
-          {% elif biz.cuisine %}
-            {% for c in biz.cuisine.split(',') %}<span class="chip">{{ c|trim|title }}</span>{% endfor %}
-          {% else %}
-            <span class="chip">Warm welcome</span><span class="chip">Local favourite</span>
-          {% endif %}
-          <div class="openline"><span class="pulse"></span> {% if hours %}Open this week{% else %}Open &amp; ready to welcome you{% endif %}</div>
-          {% if biz.address %}<div class="blurb">{{ biz.address }}</div>{% endif %}
-        </div>
-      </div>
-      {% endif %}
+      
+      
+      <div class="hero-card hero-photo" style="background-image:url('https://static.wixstatic.com/media/95b568_184570d10e94443d8e5a66d60ce62297~mv2.jpg')" role="img" aria-label="C LASH BAR"></div>
+      
     </div>
   </div>
 </div>
 
-{# ---------- SERVICES ---------- #}
-{% if service_cards %}
+
+
 <section class="services">
   <div class="wrap">
     <div class="sec-head">
       <p class="eyebrow">What we offer</p>
-      <h2>{{ service_heading if service_heading else (('Everything ' ~ biz.name ~ ' does best') if biz.category else 'What brings people in') }}</h2>
-      <p class="lead">{{ service_lead if service_lead else ('A little taste of what brings people back to ' ~ biz.name ~ ((' in ' ~ biz.city) if biz.city else '') ~ '.') }}</p>
+      <h2>Make the lash menu easy to scan</h2>
+      <p class="lead">The current site lists several lash and brow services; this sample organizes them around what clients are likely trying to book.</p>
     </div>
     <div class="grid">
-      {% for s in service_cards %}
+      
       <div class="card">
-        <span class="num" aria-hidden="true">{{ '%02d'|format(loop.index) }}</span>
-        <div class="ic" aria-hidden="true">{{ s.title[0]|upper }}</div>
-        <h3>{{ s.title }}</h3>
-        <p>{{ s.blurb }}</p>
+        <span class="num" aria-hidden="true">01</span>
+        <div class="ic" aria-hidden="true">R</div>
+        <h3>Russian Volume Lashes</h3>
+        <p>2D-5D Russian volume services surfaced as a primary booking option.</p>
       </div>
-      {% endfor %}
+      
+      <div class="card">
+        <span class="num" aria-hidden="true">02</span>
+        <div class="ic" aria-hidden="true">R</div>
+        <h3>Romantic Volume Lashes</h3>
+        <p>3D volume positioned clearly for clients comparing lash styles.</p>
+      </div>
+      
+      <div class="card">
+        <span class="num" aria-hidden="true">03</span>
+        <div class="ic" aria-hidden="true">P</div>
+        <h3>Premium Classic Lashes</h3>
+        <p>Dark and natural lash options presented without the current repeated template copy.</p>
+      </div>
+      
+      <div class="card">
+        <span class="num" aria-hidden="true">04</span>
+        <div class="ic" aria-hidden="true">P</div>
+        <h3>Premium Mink Extensions</h3>
+        <p>Natural mink extensions framed as a separate service rather than buried in the page.</p>
+      </div>
+      
+      <div class="card">
+        <span class="num" aria-hidden="true">05</span>
+        <div class="ic" aria-hidden="true">L</div>
+        <h3>Lash Tint &amp; Lifting</h3>
+        <p>Additional lash services grouped for quick scanning.</p>
+      </div>
+      
+      <div class="card">
+        <span class="num" aria-hidden="true">06</span>
+        <div class="ic" aria-hidden="true">M</div>
+        <h3>Microblading</h3>
+        <p>Brow feathering and permanent brow makeup kept visible for new visitors.</p>
+      </div>
+      
     </div>
   </div>
 </section>
-{% endif %}
 
-{# ---------- MENU / PRICE LIST (only when researched) ---------- #}
-{% if menu %}
-<section class="menu">
-  <div class="wrap">
-    <div class="sec-head">
-      <p class="eyebrow">{% if biz.category in ['café','bakery','restaurant','eatery','bar','pub','deli','ice cream shop'] %}Menu &amp; prices{% else %}Services &amp; prices{% endif %}</p>
-      <h2>{{ menu.title }}</h2>
-    </div>
-    <div class="menu-groups{% if menu.groups|length > 1 %} multi{% endif %}">
-      {% for g in menu.groups %}
-      <div class="menu-group">
-        {% if g.name %}<h3>{{ g.name }}</h3>{% endif %}
-        <div class="menu-list">
-          {% for it in g['items'] %}
-          <div class="menu-item">
-            <div class="mi-main">
-              <div class="mi-name">{{ it.name }}</div>
-              {% if it.desc %}<div class="mi-desc">{{ it.desc }}</div>{% endif %}
-            </div>
-            {% if it.price %}<div class="mi-price">{{ it.price }}</div>{% endif %}
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-    {% if menu.note %}<p class="menu-note">{{ menu.note }}</p>{% endif %}
-  </div>
-</section>
-{% endif %}
 
-{# ---------- HOW IT WORKS / STEPS (only when researched) ---------- #}
-{% if steps %}
-<section class="about">
-  <div class="wrap">
-    <div class="sec-head">
-      <p class="eyebrow">How it works</p>
-      <h2>{{ steps.title }}</h2>
-    </div>
-    <div class="steps-grid">
-      {% for it in steps['items'] %}
-      <div class="step">
-        <div class="step-n" aria-hidden="true">{{ loop.index }}</div>
-        <h3>{{ it.title }}</h3>
-        {% if it.desc %}<p>{{ it.desc }}</p>{% endif %}
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
 
-{# ---------- ABOUT ---------- #}
+
+
+
+
+
+
 <section class="about">
   <div class="wrap">
     <div class="about-inner">
-      <div class="about-art{% if hero_url %} photo{% endif %}" {% if hero_url %}style="background-image:url('{{ hero_url }}')"{% endif %} aria-hidden="true">
-        {% if reviews and reviews[0] %}
-        <div class="quote">
-          &ldquo;{{ reviews[0].text|truncate(120, true, '…') }}&rdquo;
-          <span>— {{ reviews[0].author or 'a happy customer' }}</span>
-        </div>
-        {% endif %}
+      <div class="about-art photo" style="background-image:url('https://static.wixstatic.com/media/95b568_184570d10e94443d8e5a66d60ce62297~mv2.jpg')" aria-hidden="true">
+        
       </div>
       <div class="about-text">
         <p class="eyebrow">Our story</p>
-        <h2>{{ story_heading if story_heading else 'A warm welcome, every time' }}</h2>
-        {% if about_paras %}
-          {% for p in about_paras %}<p>{{ p }}</p>{% endfor %}
-        {% elif biz.description %}
-        <p>{{ biz.description }}</p>
-        <p>Whether you're a regular or stopping by for the first time, there's always a friendly face waiting at {{ biz.name }}.</p>
-        {% else %}
-        <p>{{ biz.name }} is{% if biz.city %} a much-loved {{ category }} in {{ biz.city }}{% else %} a much-loved local {{ category }}{% endif %}, built on the simple things done well: genuine care, real quality, and the kind of welcome that makes you want to come back.</p>
-        <p>Every detail — from the moment you arrive to the moment you leave — is here to make you feel right at home.</p>
-        {% endif %}
+        <h2>A focused lash and brow studio</h2>
+        
+          <p>C LASH BAR describes itself as a lash and brow service in the heart of Neutral Bay.</p><p>The current site highlights Russian volume, romantic volume, classic lashes, mink extensions, lash tinting, lash lifting and microblading.</p><p>This sample keeps the look minimal and beauty-focused, with strong contrast, soft blush accents and a direct appointment CTA.</p>
+        
         <div class="pills">
-          {% if service_cards %}
-            {% for s in service_cards[:4] %}<span class="pill">{{ s.title }}</span>{% endfor %}
-          {% else %}
-            <span class="pill">Friendly faces</span>
-            <span class="pill">Local &amp; loved</span>
-            {% if biz.city %}<span class="pill">Proudly {{ biz.city }}</span>{% endif %}
-          {% endif %}
+          
+            <span class="pill">Russian Volume Lashes</span><span class="pill">Romantic Volume Lashes</span><span class="pill">Premium Classic Lashes</span><span class="pill">Premium Mink Extensions</span>
+          
         </div>
       </div>
     </div>
   </div>
 </section>
 
-{# ---------- REVIEWS (only when we found real ones) ---------- #}
-{% if reviews %}
-<section class="reviews">
-  <div class="wrap">
-    <div class="sec-head">
-      <p class="eyebrow">In their words</p>
-      <h2>What customers say</h2>
-      <p class="lead">A few words from people who've been in.</p>
-    </div>
-    <div class="rev-grid">
-      {% for r in reviews %}
-      <div class="rev">
-        <div class="mark2" aria-hidden="true">&ldquo;</div>
-        <p>{{ r.text }}</p>
-        <div class="who">{{ r.author or 'Verified customer' }}{% if r.source %}<small>via {{ r.source }}</small>{% endif %}</div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
 
-{# ---------- OPENING HOURS ---------- #}
-{% if hours %}
+
+
+
+
 <section class="hours">
   <div class="wrap">
     <div class="sec-head">
@@ -600,123 +499,135 @@
       <p class="lead">Pop in any time we're open — we'd love to see you.</p>
     </div>
     <div class="hours-card">
-      {% for h in hours %}
+      
       <div class="hours-row">
-        <span class="day">{{ h.day }}</span>
-        <span class="time">{{ h.time }}</span>
+        <span class="day">Mon</span>
+        <span class="time">9:00 – 17:30</span>
       </div>
-      {% endfor %}
+      
+      <div class="hours-row">
+        <span class="day">Tue</span>
+        <span class="time">Closed</span>
+      </div>
+      
+      <div class="hours-row">
+        <span class="day">Wed</span>
+        <span class="time">9:00 – 17:30</span>
+      </div>
+      
+      <div class="hours-row">
+        <span class="day">Thu</span>
+        <span class="time">9:00 – 19:00</span>
+      </div>
+      
+      <div class="hours-row">
+        <span class="day">Fri</span>
+        <span class="time">9:00 – 17:30</span>
+      </div>
+      
+      <div class="hours-row">
+        <span class="day">Sat</span>
+        <span class="time">9:00 – 15:00</span>
+      </div>
+      
+      <div class="hours-row">
+        <span class="day">Sun</span>
+        <span class="time">Closed</span>
+      </div>
+      
     </div>
   </div>
 </section>
-{% endif %}
 
-{# ---------- GOOD TO KNOW (only when researched) ---------- #}
-{% if good_to_know %}
+
+
+
 <section class="gtk">
   <div class="wrap">
     <p class="eyebrow">Good to know</p>
     <div class="gtk-wrap">
-      {% for g in good_to_know %}<span class="gtk-chip">{{ g }}</span>{% endfor %}
+      <span class="gtk-chip">Lower North Shore studio</span><span class="gtk-chip">Tuesday and Sunday closed</span><span class="gtk-chip">24 hour cancellation policy listed on current site</span>
     </div>
   </div>
 </section>
-{% endif %}
 
-{# ---------- CTA BAND ---------- #}
+
+
 <section class="cta-band">
   <div class="wrap">
     <div>
-      <h2>{{ cta.heading }}</h2>
-      <p>
-        {%- if cta.kind == 'book' %}We'd love to see you at {{ biz.name }}{% if biz.city %} in {{ biz.city }}{% endif %}. Get in touch to lock in a time.
-        {%- elif cta.kind == 'order' %}Tell us what you need and we'll take care of it.
-        {%- elif cta.kind == 'visit' %}Come and say hello{% if biz.city %} in {{ biz.city }}{% endif %} — we'd love to have you in.
-        {%- else %}Have a question or ready to get started? We're happy to help.{% endif %}
+      <h2>Ready to book?</h2>
+      <p>We'd love to see you at C LASH BAR in Neutral Bay. Get in touch to lock in a time.
       </p>
     </div>
-    <a class="btn btn-primary" href="{{ cta.href }}">{{ cta.label }} →</a>
+    <a class="btn btn-primary" href="tel:02 9953 9850">Book an appointment →</a>
   </div>
 </section>
 
-{# ---------- CONTACT / FIND US ---------- #}
+
 <section class="contact" id="contact">
   <div class="wrap">
     <div class="sec-head">
       <p class="eyebrow">Find us</p>
       <h2>Come say hello</h2>
-      <p class="lead">We'd love to welcome you to {{ biz.name }}{% if biz.city %} in {{ biz.city }}{% endif %}.</p>
+      <p class="lead">We'd love to welcome you to C LASH BAR in Neutral Bay.</p>
     </div>
     <div class="contact-grid">
       <div class="info">
-        {% if biz.address %}
+        
         <div class="info-item">
           <div class="ic2" aria-hidden="true">📍</div>
-          <div><div class="k">Address</div><div class="v">{{ biz.address }}</div></div>
+          <div><div class="k">Address</div><div class="v">Shop 5/8 Waters Rd, Neutral Bay NSW 2089, Australia</div></div>
         </div>
-        {% endif %}
-        {% if biz.phone %}
+        
+        
         <div class="info-item">
           <div class="ic2" aria-hidden="true">📞</div>
-          <div><div class="k">Phone</div><div class="v"><a href="tel:{{ biz.phone }}">{{ biz.phone }}</a></div></div>
+          <div><div class="k">Phone</div><div class="v"><a href="tel:02 9953 9850">02 9953 9850</a></div></div>
         </div>
-        {% endif %}
-        {% if biz.email %}
+        
+        
         <div class="info-item">
           <div class="ic2" aria-hidden="true">✉️</div>
-          <div><div class="k">Email</div><div class="v"><a href="mailto:{{ biz.email }}">{{ biz.email }}</a></div></div>
+          <div><div class="k">Email</div><div class="v"><a href="mailto:clashbar.lash@gmail.com">clashbar.lash@gmail.com</a></div></div>
         </div>
-        {% endif %}
-        {% if not biz.address and not biz.phone and not biz.email %}
-        <div class="info-item">
-          <div class="ic2" aria-hidden="true">👋</div>
-          <div><div class="k">Say hello</div><div class="v">We're just around the corner{% if biz.city %} in {{ biz.city }}{% endif %} — drop by any time.</div></div>
-        </div>
-        {% endif %}
+        
+        
 
-        {% if biz.instagram or biz.facebook %}
-        <div class="socials">
-          {% if biz.instagram %}
-          <a class="social" href="{% if 'http' in biz.instagram %}{{ biz.instagram }}{% else %}https://instagram.com/{{ biz.instagram|replace('@','') }}{% endif %}" target="_blank" rel="noopener">📸 Instagram</a>
-          {% endif %}
-          {% if biz.facebook %}
-          <a class="social" href="{% if 'http' in biz.facebook %}{{ biz.facebook }}{% else %}https://facebook.com/{{ biz.facebook }}{% endif %}" target="_blank" rel="noopener">👍 Facebook</a>
-          {% endif %}
-        </div>
-        {% endif %}
+        
       </div>
 
       <div class="map">
         <div class="pin" aria-hidden="true"></div>
-        <a class="maplink" href="{{ map_url }}" target="_blank" rel="noopener">Open in maps →</a>
+        <a class="maplink" href="https://www.openstreetmap.org/search?query=C+LASH+BAR+Neutral+Bay" target="_blank" rel="noopener">Open in maps →</a>
       </div>
     </div>
   </div>
 </section>
 
-{# ---------- FOOTER ---------- #}
+
 <footer>
   <div class="wrap">
     <div class="foot-grid">
       <div>
-        <div class="foot-brand">{{ biz.name }}</div>
-        {% if biz.category or biz.city %}
-        <div style="margin-top:6px;font-size:14px">{{ biz.category }}{% if biz.category and biz.city %} · {% endif %}{{ biz.city }}</div>
-        {% endif %}
+        <div class="foot-brand">C LASH BAR</div>
+        
+        <div style="margin-top:6px;font-size:14px">beauty salon · Neutral Bay</div>
+        
       </div>
-      {% if biz.phone %}<a class="foot-cta" href="tel:{{ biz.phone }}">📞 Call {{ biz.name }}</a>{% else %}<a class="foot-cta" href="#contact">Get in touch →</a>{% endif %}
+      <a class="foot-cta" href="tel:02 9953 9850">📞 Call C LASH BAR</a>
     </div>
     <div class="foot-meta">
-      <span>© {{ year }} {{ biz.name }}. All rights reserved.</span>
-      <span class="sample-badge"><span class="dot" aria-hidden="true"></span> Free sample site by {{ brand.name or 'Shiftora' }}</span>
+      <span>© 2026 C LASH BAR. All rights reserved.</span>
+      <span class="sample-badge"><span class="dot" aria-hidden="true"></span> Free sample site by Shiftora</span>
     </div>
   </div>
 </footer>
 
-{# ---------- mobile sticky CTA ---------- #}
+
 <div class="sticky-cta" id="stickyCta" role="complementary" aria-label="Contact shortcut">
-  <div class="t">{{ biz.name }}<small>Get in touch today</small></div>
-  {% if biz.phone %}<a href="tel:{{ biz.phone }}">Call now</a>{% else %}<a href="#contact">Contact</a>{% endif %}
+  <div class="t">C LASH BAR<small>Get in touch today</small></div>
+  <a href="tel:02 9953 9850">Call now</a>
 </div>
 
 <script>

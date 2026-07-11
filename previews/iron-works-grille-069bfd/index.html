@@ -1,51 +1,19 @@
 <!DOCTYPE html>
-{#
-  Shiftora sample-site template.
-
-  Reads the REAL business data we scraped plus any researched enrichment the
-  renderer injected: brand-derived palette, business-specific copy
-  (headline / hero_sub / about_paras / service_cards / highlights),
-  real reviews, and real photos (logo_url / hero_url). EVERY optional variable
-  is guarded so the page is always complete and beautiful even with none of it.
-
-  Honesty by design: NO fabricated star ratings or "loved by locals" badges —
-  the reviews section only appears when we actually found real reviews. The
-  "free sample built by Shiftora" note lives quietly in the footer, so the page
-  reads as the business's own first.
-
-  Self-contained: one inline <style>, no web fonts, no <link>/@import. The only
-  external src is an optional researched photo (logo/hero). JS is progressive
-  enhancement only.
-#}
-{%- set t = theme if theme else {} -%}
-{%- set accent      = t.accent      if t.accent      else '#c9893f' -%}
-{%- set accent_dark = t.accent_dark if t.accent_dark else '#a96f2c' -%}
-{%- set ink         = t.ink         if t.ink         else '#2a211a' -%}
-{%- set soft        = t.soft        if t.soft        else '#f7f3ee' -%}
-{%- set hero_from   = t.hero_from   if t.hero_from   else '#2a211a' -%}
-{%- set hero_to     = t.hero_to     if t.hero_to     else '#3a2c1f' -%}
-{%- set place = [] -%}
-{%- if biz.city %}{% set _ = place.append(biz.city) %}{% endif -%}
-{%- if biz.country %}{% set _ = place.append(biz.country) %}{% endif -%}
-{%- set locale = place | join(', ') -%}
-{%- set headline = headline if headline else biz.name -%}
-{%- set category = biz.category if biz.category else 'local favourite' -%}
-{%- set headline_is_name = (headline | trim | lower) == (biz.name | trim | lower) -%}
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{ biz.name }}{% if biz.city %} — {{ biz.city }}{% endif %}{% if biz.category %} · {{ biz.category }}{% endif %}</title>
-<meta name="description" content="{% if hero_sub %}{{ hero_sub }}{% elif biz.description %}{{ biz.description }}{% else %}{{ biz.name }} — {{ category }}{% if biz.city %} in {{ biz.city }}{% endif %}.{% endif %}">
-<meta name="theme-color" content="{{ accent }}">
+<title>Iron Works Grille — Tellico Plains · restaurant</title>
+<meta name="description" content="A cleaner restaurant site for menu browsing, hours, hiring enquiries and direct contact at 1641 Cherohala Skyway.">
+<meta name="theme-color" content="#4a4a4a">
 <style>
   :root{
-    --accent:{{ accent }};
-    --accent-dark:{{ accent_dark }};
-    --ink:{{ ink }};
-    --soft:{{ soft }};
-    --hero-from:{{ hero_from }};
-    --hero-to:{{ hero_to }};
+    --accent:#4a4a4a;
+    --accent-dark:#242424;
+    --ink:#202020;
+    --soft:#f5f5f5;
+    --hero-from:#101010;
+    --hero-to:#2b2b2b;
 
     --paper:#fffdfb;
     --cream:color-mix(in srgb, var(--soft) 78%, #ffffff);
@@ -377,221 +345,229 @@
 </head>
 <body>
 
-{# ---------- NAV ---------- #}
+
 <header>
   <div class="wrap">
     <nav id="nav">
       <div class="brand">
-        <div class="mark" aria-hidden="true">
-          {%- if logo_url %}<img src="{{ logo_url }}" alt="{{ biz.name }} logo">
-          {%- else %}{{ biz.name[0]|upper if biz.name else '•' }}{% endif -%}
-        </div>
+        <div class="mark" aria-hidden="true"><img src="https://img1.wsimg.com/isteam/ip/c822edfd-87a7-4e6c-b386-181de7af754c/logo(3)(1).jpg/:/rs=h:100,cg:true,m/qt=q:95" alt="Iron Works Grille logo"></div>
         <div class="brand-text">
-          <span class="brand-name">{{ biz.name }}</span>
-          {% if biz.category or biz.city %}
-          <span class="brand-sub">{{ biz.category }}{% if biz.category and biz.city %} · {% endif %}{{ biz.city }}</span>
-          {% endif %}
+          <span class="brand-name">Iron Works Grille</span>
+          
+          <span class="brand-sub">restaurant · Tellico Plains</span>
+          
         </div>
       </div>
-      <a class="nav-cta" href="#contact">{% if biz.phone %}Call us{% else %}Contact{% endif %}</a>
+      <a class="nav-cta" href="#contact">Call us</a>
     </nav>
   </div>
 </header>
 
-{# ---------- HERO ---------- #}
+
 <div class="hero">
   <div class="wrap">
     <div class="hero-inner">
       <div class="hero-copy">
-        {% if locale %}
-        <p class="eyebrow">{{ locale }}</p>
-        {% elif biz.category %}
-        <p class="eyebrow">Your local {{ biz.category }}</p>
-        {% endif %}
+        
+        <p class="eyebrow">Tellico Plains, United States</p>
+        
 
-        <h1>{{ headline }}{% if headline_is_name %}<span class="h1-kicker">{% if hero_kicker %}{{ hero_kicker }}{% elif biz.category %}Your {{ biz.category }}{% if biz.city %} in {{ biz.city }}{% endif %}{% elif biz.city %}A local favourite in {{ biz.city }}{% else %}A local favourite, done right{% endif %}</span>{% endif %}</h1>
+        <h1>Burgers, smoked plates and Southern sides on the Cherohala Skyway</h1>
 
-        <p class="hero-sub">
-          {%- if hero_sub %}{{ hero_sub }}
-          {%- else %}Welcome to {{ biz.name }}{% if biz.category %}, your friendly {{ biz.category }}{% endif %}{% if biz.city %} in the heart of {{ biz.city }}{% endif %}. We'd love to see you soon.{% endif %}
+        <p class="hero-sub">A cleaner restaurant site for menu browsing, hours, hiring enquiries and direct contact at 1641 Cherohala Skyway.
         </p>
 
         <div class="btns">
-          <a class="btn btn-primary" href="{{ cta.href }}">{{ cta.label }} →</a>
-          {% if 'tel:' in cta.href %}
+          <a class="btn btn-primary" href="tel:423-253-2373">Call the grille →</a>
+          
           <a class="btn btn-ghost" href="#contact">See what we offer →</a>
-          {% elif biz.phone %}
-          <a class="btn btn-ghost" href="tel:{{ biz.phone }}">📞 Call us</a>
-          {% endif %}
+          
         </div>
 
-        {% if highlights %}
+        
         <ul class="trust" aria-label="Highlights">
-          {% for h in highlights %}<li><span>{{ h }}</span></li>{% endfor %}
+          <li><span>Cherohala Skyway location</span></li><li><span>Open 11am-9pm</span></li><li><span>Hiring section listed</span></li>
         </ul>
-        {% endif %}
+        
       </div>
 
-      {# showcase: real photo if researched, else a varied CSS-only card #}
-      {% if hero_url %}
-      <div class="hero-card hero-photo" style="background-image:url('{{ hero_url }}')" role="img" aria-label="{{ biz.name }}"></div>
-      {% else %}
-      <div class="hero-card v{{ visual_seed }}" aria-hidden="true">
-        {% if visual_seed != 1 %}<div class="awning"></div>{% endif %}
-        <div class="pane">
-          {% if service_cards %}
-            {% for s in service_cards[:3] %}<span class="chip">{{ s.title }}</span>{% endfor %}
-          {% elif biz.cuisine %}
-            {% for c in biz.cuisine.split(',') %}<span class="chip">{{ c|trim|title }}</span>{% endfor %}
-          {% else %}
-            <span class="chip">Warm welcome</span><span class="chip">Local favourite</span>
-          {% endif %}
-          <div class="openline"><span class="pulse"></span> {% if hours %}Open this week{% else %}Open &amp; ready to welcome you{% endif %}</div>
-          {% if biz.address %}<div class="blurb">{{ biz.address }}</div>{% endif %}
-        </div>
-      </div>
-      {% endif %}
+      
+      
+      <div class="hero-card hero-photo" style="background-image:url('https://img1.wsimg.com/isteam/ip/c822edfd-87a7-4e6c-b386-181de7af754c/IMG_3366%5B1%5D.JPG/:/cr=t:12.49%25,l:0%25,w:100%25,h:75.02%25/rs=w:600,h:300,cg:true')" role="img" aria-label="Iron Works Grille"></div>
+      
     </div>
   </div>
 </div>
 
-{# ---------- SERVICES ---------- #}
-{% if service_cards %}
+
+
 <section class="services">
   <div class="wrap">
     <div class="sec-head">
       <p class="eyebrow">What we offer</p>
-      <h2>{{ service_heading if service_heading else (('Everything ' ~ biz.name ~ ' does best') if biz.category else 'What brings people in') }}</h2>
-      <p class="lead">{{ service_lead if service_lead else ('A little taste of what brings people back to ' ~ biz.name ~ ((' in ' ~ biz.city) if biz.city else '') ~ '.') }}</p>
+      <h2>A big menu made easier to scan</h2>
+      <p class="lead">The current site has useful menu detail but it is long and includes default-builder residue. This sample groups the real menu highlights into faster choices.</p>
     </div>
     <div class="grid">
-      {% for s in service_cards %}
+      
       <div class="card">
-        <span class="num" aria-hidden="true">{{ '%02d'|format(loop.index) }}</span>
-        <div class="ic" aria-hidden="true">{{ s.title[0]|upper }}</div>
-        <h3>{{ s.title }}</h3>
-        <p>{{ s.blurb }}</p>
+        <span class="num" aria-hidden="true">01</span>
+        <div class="ic" aria-hidden="true">S</div>
+        <h3>Specialty Burgers</h3>
+        <p>The Iron Works burger, Shermans Favorite and other named burgers are easier to compare.</p>
       </div>
-      {% endfor %}
+      
+      <div class="card">
+        <span class="num" aria-hidden="true">02</span>
+        <div class="ic" aria-hidden="true">E</div>
+        <h3>Entrees</h3>
+        <p>Smoked pork, BBQ half chicken, trout and chicken tenders sit in a clearer dinner section.</p>
+      </div>
+      
+      <div class="card">
+        <span class="num" aria-hidden="true">03</span>
+        <div class="ic" aria-hidden="true">S</div>
+        <h3>Starters</h3>
+        <p>Wings, smoked trout dip, fried green tomatoes and bacon-wrapped Wickles get a proper feature area.</p>
+      </div>
+      
+      <div class="card">
+        <span class="num" aria-hidden="true">04</span>
+        <div class="ic" aria-hidden="true">S</div>
+        <h3>Sandwiches</h3>
+        <p>French dip, pulled pork, chicken salad and Po Boy options are grouped for quick browsing.</p>
+      </div>
+      
     </div>
   </div>
 </section>
-{% endif %}
 
-{# ---------- MENU / PRICE LIST (only when researched) ---------- #}
-{% if menu %}
+
+
+
 <section class="menu">
   <div class="wrap">
     <div class="sec-head">
-      <p class="eyebrow">{% if biz.category in ['café','bakery','restaurant','eatery','bar','pub','deli','ice cream shop'] %}Menu &amp; prices{% else %}Services &amp; prices{% endif %}</p>
-      <h2>{{ menu.title }}</h2>
+      <p class="eyebrow">Menu &amp; prices</p>
+      <h2>Menu highlights from the current site</h2>
     </div>
-    <div class="menu-groups{% if menu.groups|length > 1 %} multi{% endif %}">
-      {% for g in menu.groups %}
+    <div class="menu-groups multi">
+      
       <div class="menu-group">
-        {% if g.name %}<h3>{{ g.name }}</h3>{% endif %}
+        <h3>Starters</h3>
         <div class="menu-list">
-          {% for it in g['items'] %}
+          
           <div class="menu-item">
             <div class="mi-main">
-              <div class="mi-name">{{ it.name }}</div>
-              {% if it.desc %}<div class="mi-desc">{{ it.desc }}</div>{% endif %}
+              <div class="mi-name">Iron Works Shrimp</div>
+              
             </div>
-            {% if it.price %}<div class="mi-price">{{ it.price }}</div>{% endif %}
+            <div class="mi-price">$12.99</div>
           </div>
-          {% endfor %}
+          
+          <div class="menu-item">
+            <div class="mi-main">
+              <div class="mi-name">Smoked Trout Dip</div>
+              
+            </div>
+            <div class="mi-price">$11.99</div>
+          </div>
+          
+          <div class="menu-item">
+            <div class="mi-main">
+              <div class="mi-name">Fried Green Tomatoes</div>
+              
+            </div>
+            <div class="mi-price">$7.99</div>
+          </div>
+          
+          <div class="menu-item">
+            <div class="mi-main">
+              <div class="mi-name">Pretzel &amp; Beer Cheese</div>
+              
+            </div>
+            <div class="mi-price">$8.99</div>
+          </div>
+          
         </div>
       </div>
-      {% endfor %}
-    </div>
-    {% if menu.note %}<p class="menu-note">{{ menu.note }}</p>{% endif %}
-  </div>
-</section>
-{% endif %}
-
-{# ---------- HOW IT WORKS / STEPS (only when researched) ---------- #}
-{% if steps %}
-<section class="about">
-  <div class="wrap">
-    <div class="sec-head">
-      <p class="eyebrow">How it works</p>
-      <h2>{{ steps.title }}</h2>
-    </div>
-    <div class="steps-grid">
-      {% for it in steps['items'] %}
-      <div class="step">
-        <div class="step-n" aria-hidden="true">{{ loop.index }}</div>
-        <h3>{{ it.title }}</h3>
-        {% if it.desc %}<p>{{ it.desc }}</p>{% endif %}
+      
+      <div class="menu-group">
+        <h3>Burgers and plates</h3>
+        <div class="menu-list">
+          
+          <div class="menu-item">
+            <div class="mi-main">
+              <div class="mi-name">The Iron Works</div>
+              <div class="mi-desc">Bacon jam, cheddar jack and fried green tomato.</div>
+            </div>
+            <div class="mi-price">$14.49</div>
+          </div>
+          
+          <div class="menu-item">
+            <div class="mi-main">
+              <div class="mi-name">House Smoked Pulled Pork</div>
+              
+            </div>
+            <div class="mi-price">$11.99</div>
+          </div>
+          
+          <div class="menu-item">
+            <div class="mi-main">
+              <div class="mi-name">Hand Breaded Trout</div>
+              
+            </div>
+            <div class="mi-price">$14.99</div>
+          </div>
+          
+          <div class="menu-item">
+            <div class="mi-main">
+              <div class="mi-name">Classic Hamburger</div>
+              
+            </div>
+            <div class="mi-price">$11.99</div>
+          </div>
+          
+        </div>
       </div>
-      {% endfor %}
+      
     </div>
+    <p class="menu-note">Prices and dishes are taken from the current site where shown.</p>
   </div>
 </section>
-{% endif %}
 
-{# ---------- ABOUT ---------- #}
+
+
+
+
+
 <section class="about">
   <div class="wrap">
     <div class="about-inner">
-      <div class="about-art{% if hero_url %} photo{% endif %}" {% if hero_url %}style="background-image:url('{{ hero_url }}')"{% endif %} aria-hidden="true">
-        {% if reviews and reviews[0] %}
-        <div class="quote">
-          &ldquo;{{ reviews[0].text|truncate(120, true, '…') }}&rdquo;
-          <span>— {{ reviews[0].author or 'a happy customer' }}</span>
-        </div>
-        {% endif %}
+      <div class="about-art photo" style="background-image:url('https://img1.wsimg.com/isteam/ip/c822edfd-87a7-4e6c-b386-181de7af754c/IMG_3366%5B1%5D.JPG/:/cr=t:12.49%25,l:0%25,w:100%25,h:75.02%25/rs=w:600,h:300,cg:true')" aria-hidden="true">
+        
       </div>
       <div class="about-text">
         <p class="eyebrow">Our story</p>
-        <h2>{{ story_heading if story_heading else 'A warm welcome, every time' }}</h2>
-        {% if about_paras %}
-          {% for p in about_paras %}<p>{{ p }}</p>{% endfor %}
-        {% elif biz.description %}
-        <p>{{ biz.description }}</p>
-        <p>Whether you're a regular or stopping by for the first time, there's always a friendly face waiting at {{ biz.name }}.</p>
-        {% else %}
-        <p>{{ biz.name }} is{% if biz.city %} a much-loved {{ category }} in {{ biz.city }}{% else %} a much-loved local {{ category }}{% endif %}, built on the simple things done well: genuine care, real quality, and the kind of welcome that makes you want to come back.</p>
-        <p>Every detail — from the moment you arrive to the moment you leave — is here to make you feel right at home.</p>
-        {% endif %}
+        <h2>A practical grille site for locals and travelers</h2>
+        
+          <p>Iron Works Grille publishes a large menu from wings and starters through specialty burgers, entrees, sandwiches, salads, sides and desserts.</p><p>The current site also includes a visit section, hiring section, contact form, phone number and address in Tellico Plains.</p><p>This sample keeps the black-and-white logo feel, then warms it with food-photo colors and clearer menu hierarchy.</p>
+        
         <div class="pills">
-          {% if service_cards %}
-            {% for s in service_cards[:4] %}<span class="pill">{{ s.title }}</span>{% endfor %}
-          {% else %}
-            <span class="pill">Friendly faces</span>
-            <span class="pill">Local &amp; loved</span>
-            {% if biz.city %}<span class="pill">Proudly {{ biz.city }}</span>{% endif %}
-          {% endif %}
+          
+            <span class="pill">Specialty Burgers</span><span class="pill">Entrees</span><span class="pill">Starters</span><span class="pill">Sandwiches</span>
+          
         </div>
       </div>
     </div>
   </div>
 </section>
 
-{# ---------- REVIEWS (only when we found real ones) ---------- #}
-{% if reviews %}
-<section class="reviews">
-  <div class="wrap">
-    <div class="sec-head">
-      <p class="eyebrow">In their words</p>
-      <h2>What customers say</h2>
-      <p class="lead">A few words from people who've been in.</p>
-    </div>
-    <div class="rev-grid">
-      {% for r in reviews %}
-      <div class="rev">
-        <div class="mark2" aria-hidden="true">&ldquo;</div>
-        <p>{{ r.text }}</p>
-        <div class="who">{{ r.author or 'Verified customer' }}{% if r.source %}<small>via {{ r.source }}</small>{% endif %}</div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
 
-{# ---------- OPENING HOURS ---------- #}
-{% if hours %}
+
+
+
+
 <section class="hours">
   <div class="wrap">
     <div class="sec-head">
@@ -600,123 +576,105 @@
       <p class="lead">Pop in any time we're open — we'd love to see you.</p>
     </div>
     <div class="hours-card">
-      {% for h in hours %}
+      
       <div class="hours-row">
-        <span class="day">{{ h.day }}</span>
-        <span class="time">{{ h.time }}</span>
+        <span class="day">Mon–Sun</span>
+        <span class="time">11:00 – 21:00</span>
       </div>
-      {% endfor %}
+      
     </div>
   </div>
 </section>
-{% endif %}
 
-{# ---------- GOOD TO KNOW (only when researched) ---------- #}
-{% if good_to_know %}
+
+
+
 <section class="gtk">
   <div class="wrap">
     <p class="eyebrow">Good to know</p>
     <div class="gtk-wrap">
-      {% for g in good_to_know %}<span class="gtk-chip">{{ g }}</span>{% endfor %}
+      <span class="gtk-chip">Address and phone listed twice on current site</span><span class="gtk-chip">Job application form present</span><span class="gtk-chip">Default-builder footnote text still visible</span>
     </div>
   </div>
 </section>
-{% endif %}
 
-{# ---------- CTA BAND ---------- #}
+
+
 <section class="cta-band">
   <div class="wrap">
     <div>
-      <h2>{{ cta.heading }}</h2>
-      <p>
-        {%- if cta.kind == 'book' %}We'd love to see you at {{ biz.name }}{% if biz.city %} in {{ biz.city }}{% endif %}. Get in touch to lock in a time.
-        {%- elif cta.kind == 'order' %}Tell us what you need and we'll take care of it.
-        {%- elif cta.kind == 'visit' %}Come and say hello{% if biz.city %} in {{ biz.city }}{% endif %} — we'd love to have you in.
-        {%- else %}Have a question or ready to get started? We're happy to help.{% endif %}
+      <h2>Give us a call</h2>
+      <p>Have a question or ready to get started? We're happy to help.
       </p>
     </div>
-    <a class="btn btn-primary" href="{{ cta.href }}">{{ cta.label }} →</a>
+    <a class="btn btn-primary" href="tel:423-253-2373">Call the grille →</a>
   </div>
 </section>
 
-{# ---------- CONTACT / FIND US ---------- #}
+
 <section class="contact" id="contact">
   <div class="wrap">
     <div class="sec-head">
       <p class="eyebrow">Find us</p>
       <h2>Come say hello</h2>
-      <p class="lead">We'd love to welcome you to {{ biz.name }}{% if biz.city %} in {{ biz.city }}{% endif %}.</p>
+      <p class="lead">We'd love to welcome you to Iron Works Grille in Tellico Plains.</p>
     </div>
     <div class="contact-grid">
       <div class="info">
-        {% if biz.address %}
+        
         <div class="info-item">
           <div class="ic2" aria-hidden="true">📍</div>
-          <div><div class="k">Address</div><div class="v">{{ biz.address }}</div></div>
+          <div><div class="k">Address</div><div class="v">1641 Cherohala Skyway, Tellico Plains, Tennessee 37385, United States</div></div>
         </div>
-        {% endif %}
-        {% if biz.phone %}
+        
+        
         <div class="info-item">
           <div class="ic2" aria-hidden="true">📞</div>
-          <div><div class="k">Phone</div><div class="v"><a href="tel:{{ biz.phone }}">{{ biz.phone }}</a></div></div>
+          <div><div class="k">Phone</div><div class="v"><a href="tel:423-253-2373">423-253-2373</a></div></div>
         </div>
-        {% endif %}
-        {% if biz.email %}
+        
+        
         <div class="info-item">
           <div class="ic2" aria-hidden="true">✉️</div>
-          <div><div class="k">Email</div><div class="v"><a href="mailto:{{ biz.email }}">{{ biz.email }}</a></div></div>
+          <div><div class="k">Email</div><div class="v"><a href="mailto:ironworkstp@gmail.com">ironworkstp@gmail.com</a></div></div>
         </div>
-        {% endif %}
-        {% if not biz.address and not biz.phone and not biz.email %}
-        <div class="info-item">
-          <div class="ic2" aria-hidden="true">👋</div>
-          <div><div class="k">Say hello</div><div class="v">We're just around the corner{% if biz.city %} in {{ biz.city }}{% endif %} — drop by any time.</div></div>
-        </div>
-        {% endif %}
+        
+        
 
-        {% if biz.instagram or biz.facebook %}
-        <div class="socials">
-          {% if biz.instagram %}
-          <a class="social" href="{% if 'http' in biz.instagram %}{{ biz.instagram }}{% else %}https://instagram.com/{{ biz.instagram|replace('@','') }}{% endif %}" target="_blank" rel="noopener">📸 Instagram</a>
-          {% endif %}
-          {% if biz.facebook %}
-          <a class="social" href="{% if 'http' in biz.facebook %}{{ biz.facebook }}{% else %}https://facebook.com/{{ biz.facebook }}{% endif %}" target="_blank" rel="noopener">👍 Facebook</a>
-          {% endif %}
-        </div>
-        {% endif %}
+        
       </div>
 
       <div class="map">
         <div class="pin" aria-hidden="true"></div>
-        <a class="maplink" href="{{ map_url }}" target="_blank" rel="noopener">Open in maps →</a>
+        <a class="maplink" href="https://www.openstreetmap.org/search?query=Iron+Works+Grille+Tellico+Plains" target="_blank" rel="noopener">Open in maps →</a>
       </div>
     </div>
   </div>
 </section>
 
-{# ---------- FOOTER ---------- #}
+
 <footer>
   <div class="wrap">
     <div class="foot-grid">
       <div>
-        <div class="foot-brand">{{ biz.name }}</div>
-        {% if biz.category or biz.city %}
-        <div style="margin-top:6px;font-size:14px">{{ biz.category }}{% if biz.category and biz.city %} · {% endif %}{{ biz.city }}</div>
-        {% endif %}
+        <div class="foot-brand">Iron Works Grille</div>
+        
+        <div style="margin-top:6px;font-size:14px">restaurant · Tellico Plains</div>
+        
       </div>
-      {% if biz.phone %}<a class="foot-cta" href="tel:{{ biz.phone }}">📞 Call {{ biz.name }}</a>{% else %}<a class="foot-cta" href="#contact">Get in touch →</a>{% endif %}
+      <a class="foot-cta" href="tel:423-253-2373">📞 Call Iron Works Grille</a>
     </div>
     <div class="foot-meta">
-      <span>© {{ year }} {{ biz.name }}. All rights reserved.</span>
-      <span class="sample-badge"><span class="dot" aria-hidden="true"></span> Free sample site by {{ brand.name or 'Shiftora' }}</span>
+      <span>© 2026 Iron Works Grille. All rights reserved.</span>
+      <span class="sample-badge"><span class="dot" aria-hidden="true"></span> Free sample site by Shiftora</span>
     </div>
   </div>
 </footer>
 
-{# ---------- mobile sticky CTA ---------- #}
+
 <div class="sticky-cta" id="stickyCta" role="complementary" aria-label="Contact shortcut">
-  <div class="t">{{ biz.name }}<small>Get in touch today</small></div>
-  {% if biz.phone %}<a href="tel:{{ biz.phone }}">Call now</a>{% else %}<a href="#contact">Contact</a>{% endif %}
+  <div class="t">Iron Works Grille<small>Get in touch today</small></div>
+  <a href="tel:423-253-2373">Call now</a>
 </div>
 
 <script>
