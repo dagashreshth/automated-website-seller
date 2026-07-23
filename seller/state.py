@@ -58,10 +58,14 @@ def _ensure_files() -> None:
     STATE_DIR.mkdir(parents=True, exist_ok=True)
     if not SENT_CSV.exists():
         with open(SENT_CSV, "w", newline="", encoding="utf-8") as fh:
-            csv.DictWriter(fh, fieldnames=SENT_FIELDS).writeheader()
+            csv.DictWriter(
+                fh, fieldnames=SENT_FIELDS, lineterminator="\n"
+            ).writeheader()
     if not SUPPRESSION_CSV.exists():
         with open(SUPPRESSION_CSV, "w", newline="", encoding="utf-8") as fh:
-            csv.DictWriter(fh, fieldnames=SUPPRESSION_FIELDS).writeheader()
+            csv.DictWriter(
+                fh, fieldnames=SUPPRESSION_FIELDS, lineterminator="\n"
+            ).writeheader()
 
 
 def load_sent_keys() -> set[str]:
@@ -91,7 +95,9 @@ def is_suppressed(email: str, suppression: set[str]) -> bool:
 def mark_sent(prospect: dict, *, preview_url: str, mode: str) -> None:
     _ensure_files()
     with open(SENT_CSV, "a", newline="", encoding="utf-8") as fh:
-        csv.DictWriter(fh, fieldnames=SENT_FIELDS).writerow({
+        csv.DictWriter(
+            fh, fieldnames=SENT_FIELDS, lineterminator="\n"
+        ).writerow({
             "key": sent_id(prospect),
             "name": prospect.get("name", ""),
             "source": prospect.get("source", ""),
@@ -109,6 +115,8 @@ def add_suppression(value: str, reason: str = "manual") -> None:
     if not value.strip() or hashed in load_suppression():
         return
     with open(SUPPRESSION_CSV, "a", newline="", encoding="utf-8") as fh:
-        csv.DictWriter(fh, fieldnames=SUPPRESSION_FIELDS).writerow(
+        csv.DictWriter(
+            fh, fieldnames=SUPPRESSION_FIELDS, lineterminator="\n"
+        ).writerow(
             {"value": hashed, "reason": reason, "added_at": _now()}
         )
