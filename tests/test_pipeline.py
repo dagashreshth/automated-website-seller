@@ -160,12 +160,15 @@ def test_injected_copy_is_used():
     p["copy"] = {
         "hero_headline": "The friendliest corner cafe in Fremantle",
         "hero_sub": "Single-origin coffee and house-baked pastries since 2014.",
+        "secondary_cta": "Browse the counter",
+        "service_eyebrow": "From the kitchen",
         "services": [{"title": "Single-Origin Coffee", "blurb": "Roasted locally."}],
         "about": ["We opened our doors in 2014."],
     }
     out = website._env.get_template("site/index.html.j2").render(**website.build_context(p, CFG))
     assert "The friendliest corner cafe in Fremantle" in out
     assert "Single-origin coffee and house-baked pastries since 2014." in out
+    assert "Browse the counter" in out and "From the kitchen" in out
     assert "We opened our doors in 2014." in out
 
 
@@ -195,13 +198,14 @@ def test_menu_steps_gtk_render_only_when_present():
     # cta band always present
     assert '<section class="cta-band">' in plain
     p = dict(SAMPLE)
-    p["menu"] = {"title": "Our coffee", "groups": [
+    p["menu"] = {"eyebrow": "Current selection", "title": "Our coffee", "groups": [
         {"name": "Coffee", "items": [{"name": "Flat white", "price": "$5"}]}]}
     p["steps"] = {"title": "How to order", "items": [{"title": "Walk in", "desc": "Grab a seat."}]}
     p["good_to_know"] = ["Dog-friendly", "EFTPOS & cash"]
     full = tmpl.render(**website.build_context(p, CFG))
     assert '<section class="menu">' in full
     # menu items use bracket access (not the dict.items method) -> real item shows
+    assert "Current selection" in full
     assert "Our coffee" in full and "Flat white" in full and "$5" in full
     assert '<div class="steps-grid">' in full and "How to order" in full and "Walk in" in full
     assert '<section class="gtk">' in full and "Dog-friendly" in full

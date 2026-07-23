@@ -18,7 +18,8 @@ unattended cron still produces a beautiful page with none of them):
     prospect["palette_name"]  -> name of a built-in palette to use instead
     prospect["copy"] = {
         "hero_headline", "hero_kicker", "hero_sub",
-        "service_heading", "service_lead", "story_heading", "about": [..paras..],
+        "secondary_cta", "service_eyebrow", "service_heading", "service_lead",
+        "story_heading", "about": [..paras..],
         "services": [{"title","blurb"}, ..],
         "highlights": [..short honest chips..],
     }
@@ -494,8 +495,12 @@ def _cta(prospect: dict, category: str) -> dict:
 
 
 def _menu(prospect: dict) -> dict | None:
-    """Normalise an optional menu / price list into {title, note, groups:[{name,
-    items:[{name, desc, price}]}]}. Accepts a flat item list too."""
+    """Normalise an optional menu / price list into {eyebrow, title, note,
+    groups:[{name, items:[{name, desc, price}]}]}. Accepts a flat item list too.
+
+    ``eyebrow`` lets researched samples describe an unpriced product or service
+    list accurately instead of implying that prices are shown.
+    """
     m = prospect.get("menu")
     if not isinstance(m, dict):
         return None
@@ -520,7 +525,8 @@ def _menu(prospect: dict) -> dict | None:
             groups.append({"name": str(g.get("name", "") or ""), "items": items})
     if not groups:
         return None
-    return {"title": str(m.get("title") or "What we offer"),
+    return {"eyebrow": str(m.get("eyebrow", "") or ""),
+            "title": str(m.get("title") or "What we offer"),
             "note": str(m.get("note", "") or ""), "groups": groups}
 
 
@@ -567,6 +573,8 @@ def build_context(prospect: dict, cfg: dict) -> dict:
         "headline": copy.get("hero_headline") or prospect.get("name", ""),
         "hero_kicker": copy.get("hero_kicker", ""),
         "hero_sub": _hero_sub(prospect),
+        "secondary_cta": copy.get("secondary_cta", "See what we offer"),
+        "service_eyebrow": copy.get("service_eyebrow", "What we offer"),
         "service_heading": copy.get("service_heading", ""),
         "service_lead": copy.get("service_lead", ""),
         "story_heading": copy.get("story_heading", ""),
