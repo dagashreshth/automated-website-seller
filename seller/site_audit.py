@@ -20,7 +20,7 @@ EMAIL_RE = re.compile(r"(?i)\b[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}\b")
 CFEMAIL_RE = re.compile(r'data-cfemail=["\']([a-f0-9]+)["\']', re.I)
 BAD_EMAIL_DOMAINS = {
     "example.com", "example.org", "example.net", "domain.com",
-    "yourdomain.com", "shiftora.ai", "company.site",
+    "yourdomain.com", "mysite.com", "shiftora.ai", "company.site",
     "sentry.wixpress.com", "sentry-next.wixpress.com",
 }
 BAD_EMAILS = {

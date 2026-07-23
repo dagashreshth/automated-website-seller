@@ -400,6 +400,7 @@ def test_site_audit_extracts_contacts_and_scores_weak_page():
 def test_site_audit_filters_technical_emails_and_scores_builder_domains():
     html = """
     hello@realbusiness.com
+    info@mysite.com
     605a7baede844d278b89dc95ae0a9123@sentry-next.wixpress.com
     abuse@company.site
     impallari@gmail.com
